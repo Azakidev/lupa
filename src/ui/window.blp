@@ -1,0 +1,59 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $PikolaunchWindow: Adw.ApplicationWindow {
+    width-request: 600;
+    height-request: 48;
+
+    styles [
+        "launcher",
+    ]
+
+    Box {
+        margin-start: 8;
+        margin-end: 8;
+        margin-top: 8;
+        margin-bottom: 8;
+        orientation: vertical;
+
+        Box {
+            orientation: horizontal;
+            margin-start: 8;
+            spacing: 8;
+
+            Image {
+                icon-name: "search";
+                pixel-size: 24;
+
+                accessibility {
+                    label: _("Search");
+                }
+            }
+
+            Entry input {
+                styles [
+                    "flat",
+                    "searcher",
+                ]
+
+                text: _("");
+                placeholder-text: _("Search anything…");
+                hexpand: true;
+                vexpand: true;
+            }
+        }
+
+        Revealer result_revealer {
+            // TODO
+            reveal-child: false;
+
+            Separator {}
+
+            ScrolledWindow scroller {
+                Box results {
+                    orientation: vertical;
+                }
+            }
+        }
+    }
+}

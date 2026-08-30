@@ -1,0 +1,12 @@
+
+.launcher {
+    border-radius: 12px;
+}
+
+.searcher {
+    border: none;
+    outline: none;
+    padding: 8px;
+
+    font-size: 18px;
+}

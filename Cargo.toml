@@ -1,0 +1,23 @@
+[package]
+name = "pikolaunch"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Toolkit
+gtk4-layer-shell = "0.8"
+gtk = { package = "gtk4", version = "0.11", features = [
+    "gnome_50",
+    "blueprint",
+] }
+adw = { package = "libadwaita", version = "0.9", features = ["v1_9"] }
+gettext-rs = "0.8"
+
+# Helpers
+serde = { version = "1.0", features = ["derive"] }
+toml = "1.1"
+fuzzy-matcher = "0.3"
+xdg = "3.0.0"
+
+[build-dependencies]
+glib-build-tools = "0.22"

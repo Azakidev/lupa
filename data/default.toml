@@ -1,0 +1,20 @@
+# Configuration file for Pikolaunch
+# Uncomment a line to apply changes
+
+[Aesthetic]
+# The opacity for the window
+# opacity=1.0 # Float (Default: 1.0, Range: [0–1])
+
+# The rounding of the main window
+# radius=12 # Integer (Default: 12, Range [0-u32 limit])
+
+# The amount of visible entries
+# entries=5 # Integer (Default: 5, Range: [0–u32 limit])
+
+# The height of each entry
+# entry_size=64 # Integer (Default: 64, Range: [0–u32 limit])
+
+[Behavior]
+# Whether the launcher will close the moment it loses its active
+# status by, for example, clicking off the launcher
+# close_when_unfocused=true # Boolean (Default: true)

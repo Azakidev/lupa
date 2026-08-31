@@ -10,7 +10,7 @@ use std::{
     env::var,
     eprintln,
     fs::{self, File},
-    io::{Read, Write},
+    io::Write,
 };
 
 // COMPILE TIME CONSTANTS
@@ -69,27 +69,16 @@ impl PikolaunchConfig {
     pub fn load_config() -> Self {
         let path = config_path();
 
-        let file = File::open(path);
-
-        match file {
-            Ok(mut f) => {
-                let mut string = String::new();
-                match f.read_to_string(&mut string) {
-                    Ok(_) => {
-                        let conf: PikolaunchConfig = match toml::from_str(&string) {
-                            Ok(c) => c,
-                            Err(e) => {
-                                eprintln!("[Error] Failed to parse config file: {}", e);
-                                Self::default()
-                            }
-                        };
-                        conf
-                    }
+        match fs::read_to_string(path) {
+            Ok(buf) => {
+                let conf: PikolaunchConfig = match toml::from_str(&buf) {
+                    Ok(c) => c,
                     Err(e) => {
-                        eprintln!("[Error] Failed to read config file: {}", e);
+                        eprintln!("[Error] Failed to parse config file: {}", e);
                         Self::default()
                     }
-                }
+                };
+                conf
             }
             Err(_) => {
                 Self::save_default_config();

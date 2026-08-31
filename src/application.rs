@@ -10,7 +10,7 @@ use gtk::gdk::Display;
 
 use crate::{
     PikolaunchWindow,
-    config::{self, PikolaunchConfig},
+    config::PikolaunchConfig,
     providers::app::{App, discover_apps},
 };
 
@@ -113,11 +113,24 @@ impl PikolaunchApplication {
         let opacity = config.aesthetic.opacity;
         let radius = config.aesthetic.radius;
 
+        let entry_size = config.aesthetic.entry_size;
+        let img_size = entry_size - 4;
+
         provider.load_from_string(&format!(
             ".launcher {{
                 background-color: rgb(from var(--window-bg-color) r g b / {opacity});
                 border-radius: {radius}px;
-            }}"
+            }}
+
+            .launcher_entry {{
+                min-height: {entry_size}px;
+            }}
+
+            .entry_image {{
+                min-height: {img_size}px;
+                min-width:  {img_size}px;
+            }}
+            "
         ));
 
         gtk::style_context_add_provider_for_display(

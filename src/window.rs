@@ -5,15 +5,25 @@
  * SPDX-License-Identifier: MIT
  */
 
-use adw::{gio, glib, prelude::*, subclass::prelude::*};
+use adw::{
+    gio,
+    glib::{self, WeakRef},
+    prelude::*,
+    subclass::prelude::*,
+};
 use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
+use std::{
+    cell::{OnceCell, RefCell},
+    collections::HashMap,
+};
 
-use crate::{application::PikolaunchApplication, providers::app::{App, find_icon_path}};
+use crate::{
+    application::PikolaunchApplication,
+    providers::app::{App, find_icon_path},
+};
 
 mod imp {
-
-    use std::cell::OnceCell;
 
     use super::*;
 
@@ -30,6 +40,7 @@ mod imp {
         pub results: TemplateChild<gtk::Box>,
 
         pub matcher: OnceCell<SkimMatcherV2>,
+        pub cache: RefCell<HashMap<String, WeakRef<gtk::Box>>>,
     }
 
     #[glib::object_subclass]
@@ -55,6 +66,7 @@ mod imp {
             obj.setup_layer();
             obj.setup_watch_focus();
             obj.setup_input();
+            obj.setup_app_entries();
         }
     }
 
@@ -131,16 +143,17 @@ impl PikolaunchWindow {
 
     fn clear_results(&self) {
         let imp = self.imp();
-        let results = imp.results.get();
 
-        while let Some(child) = results.first_child() {
-            results.remove(&child);
-        }
+        imp.cache.borrow().iter().for_each(|(_, e)| {
+            if let Some(entry) = e.upgrade() {
+                entry.set_visible(false);
+            };
+        });
     }
 
     fn update_results(&self, query: &str) {
         let imp = self.imp();
-        let results = imp.results.get();
+        let cache = imp.cache.borrow();
         let matcher = imp.matcher.get().unwrap();
 
         self.clear_results();
@@ -164,18 +177,53 @@ impl PikolaunchWindow {
             });
 
             filtered.iter().rev().for_each(|a| {
-                let name = a.icon.clone().unwrap_or_default();
-                let file = find_icon_path(&name);
-                let image = gtk::Image::from_file(file.unwrap_or_default());
-                let label = gtk::Label::new(Some(&a.name));
-
-                let cont = gtk::Box::new(gtk::Orientation::Horizontal, 8);
-                cont.set_hexpand(true);
-                cont.append(&image);
-                cont.append(&label);
-
-                results.append(&cont);
+                if let Some(weak) = cache.get(&a.name)
+                    && let Some(entry) = weak.upgrade()
+                {
+                    entry.set_visible(true);
+                }
             });
         }
+    }
+
+    fn setup_app_entries(&self) {
+        let weak = self.downgrade();
+        glib::spawn_future_local(async move {
+            let Some(obj) = weak.upgrade() else {
+                return glib::ControlFlow::Break;
+            };
+
+            let imp = obj.imp();
+            let mut cache = imp.cache.borrow_mut();
+            let results = &imp.results;
+
+            if let Some(app) = obj.application().and_downcast::<PikolaunchApplication>() {
+                let apps = app.apps();
+
+                for app in apps {
+                    // TODO: Replace with entry widget constructor
+                    let icon_name = app.icon.clone().unwrap_or_default();
+                    let file = find_icon_path(&icon_name);
+                    let image = gtk::Image::from_file(file.unwrap_or_default());
+                    image.add_css_class("entry_image");
+                    image.set_icon_size(gtk::IconSize::Large);
+
+                    let label = gtk::Label::new(Some(&app.name));
+
+                    let cont = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+                    cont.set_hexpand(true);
+                    cont.append(&image);
+                    cont.append(&label);
+                    cont.add_css_class("launcher_entry");
+                    cont.set_visible(false);
+
+                    results.append(&cont);
+
+                    cache.insert(app.name.clone(), cont.downgrade());
+                }
+            }
+
+            glib::ControlFlow::Break
+        });
     }
 }

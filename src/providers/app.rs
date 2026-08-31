@@ -9,8 +9,7 @@ use std::{
     env::var,
     eprintln,
     fmt::Write,
-    fs::File,
-    io::Read,
+    fs,
     path::{Path, PathBuf},
 };
 
@@ -22,6 +21,7 @@ pub struct App {
     pub exec: String,
     pub comment: Option<String>,
     pub icon: Option<String>,
+    pub is_flatpak: bool
 }
 
 pub fn discover_apps() -> Option<Vec<App>> {
@@ -38,20 +38,20 @@ pub fn discover_apps() -> Option<Vec<App>> {
     let mut apps: Vec<App> = Vec::new();
 
     for path in locations.split(":") {
-        let app_dir = format!("{path}applications");
-        if let Ok(reader) = std::fs::read_dir(app_dir) {
+        let app_dir = Path::new(path).join("applications");
+
+        let is_flatpak = path.contains("flatpak");
+
+        if let Ok(reader) = std::fs::read_dir(&app_dir) {
             let mut found_apps = reader
                 .filter_map(|e| -> Option<App> {
                     if let Ok(entry) = e
                         && entry.file_name().to_string_lossy().ends_with("desktop")
                     {
                         let path = entry.path();
-                        let mut buf = String::new();
 
-                        if let Ok(mut f) = File::open(path)
-                            && f.read_to_string(&mut buf).is_ok()
-                        {
-                            parse_desktop_entry(&buf, &desktop)
+                        if let Ok(buf) = fs::read_to_string(path) {
+                            parse_desktop_entry(&buf, &desktop, is_flatpak)
                         } else {
                             None
                         }
@@ -68,7 +68,7 @@ pub fn discover_apps() -> Option<Vec<App>> {
     Some(apps)
 }
 
-fn parse_desktop_entry(content: &str, current_desktop: &str) -> Option<App> {
+fn parse_desktop_entry(content: &str, current_desktop: &str, is_flatpak: bool) -> Option<App> {
     let mut app = App::default();
     let mut in_main_section = false;
 
@@ -76,6 +76,8 @@ fn parse_desktop_entry(content: &str, current_desktop: &str) -> Option<App> {
     let mut has_exec = false;
     let mut has_type = false;
     let mut should_hide = false;
+
+    app.is_flatpak = is_flatpak;
 
     for line in content.lines() {
         let line = line.trim();

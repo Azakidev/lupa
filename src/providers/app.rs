@@ -13,7 +13,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-const ICON_SIZES: [i32; 6] = [16, 32, 48, 64, 128, 256];
+use icon_finder::find_icon;
 
 #[derive(Debug, Default, Clone)]
 pub struct App {
@@ -94,52 +94,51 @@ fn parse_desktop_entry(content: &str, current_desktop: &str, is_flatpak: bool) -
             continue;
         }
 
-        if in_main_section
-            && let Some((key, value)) = line.split_once('=') {
-                let key = key.trim();
-                let value = value.trim();
+        if in_main_section && let Some((key, value)) = line.split_once('=') {
+            let key = key.trim();
+            let value = value.trim();
 
-                match key {
-                    "Type" => {
-                        if value != "Application" {
-                            return None;
-                        }
-                        has_type = true;
+            match key {
+                "Type" => {
+                    if value != "Application" {
+                        return None;
                     }
-                    "NoDisplay" | "Hidden" => {
-                        if value == "true" {
-                            should_hide = true;
-                        }
-                    }
-                    "OnlyShowIn" => {
-                        let mut required_desktops = value.split(';').filter(|s| !s.is_empty());
-                        let is_match = required_desktops.any(|d| current_desktop == d);
-
-                        if !is_match {
-                            should_hide = true;
-                        }
-                    }
-                    "NotShowIn" => {
-                        let mut required_desktops = value.split(';').filter(|s| !s.is_empty());
-                        let is_match = required_desktops.any(|d| current_desktop == d);
-
-                        if is_match {
-                            should_hide = true;
-                        }
-                    }
-                    "Name" => {
-                        app.name = value.to_string();
-                        has_name = true;
-                    }
-                    "Exec" => {
-                        app.exec = value.to_string();
-                        has_exec = true;
-                    }
-                    "Icon" => app.icon = Some(value.to_string()),
-                    "Comment" => app.comment = Some(value.to_string()),
-                    _ => {}
+                    has_type = true;
                 }
+                "NoDisplay" | "Hidden" => {
+                    if value == "true" {
+                        should_hide = true;
+                    }
+                }
+                "OnlyShowIn" => {
+                    let mut required_desktops = value.split(';').filter(|s| !s.is_empty());
+                    let is_match = required_desktops.any(|d| current_desktop == d);
+
+                    if !is_match {
+                        should_hide = true;
+                    }
+                }
+                "NotShowIn" => {
+                    let mut required_desktops = value.split(';').filter(|s| !s.is_empty());
+                    let is_match = required_desktops.any(|d| current_desktop == d);
+
+                    if is_match {
+                        should_hide = true;
+                    }
+                }
+                "Name" => {
+                    app.name = value.to_string();
+                    has_name = true;
+                }
+                "Exec" => {
+                    app.exec = value.to_string();
+                    has_exec = true;
+                }
+                "Icon" => app.icon = Some(value.to_string()),
+                "Comment" => app.comment = Some(value.to_string()),
+                _ => {}
             }
+        }
     }
 
     if !should_hide && has_name && has_exec && has_type {
@@ -149,28 +148,32 @@ fn parse_desktop_entry(content: &str, current_desktop: &str, is_flatpak: bool) -
     }
 }
 
-pub fn find_icon_path(name: &str) -> Option<PathBuf> {
+pub fn find_icon_path(name: &str, size: u32) -> Option<PathBuf> {
     let path = Path::new(name);
 
     if path.is_absolute() && path.exists() {
         return Some(path.to_path_buf());
     }
 
+    // Android Studio seems to be broken on some themes, prefer the default pixmap icon
+    if let Some(path) = find_icon(name, size)
+        && name != "android-studio"
+    {
+        return Some(path);
+    }
+
     let xdg_dirs = xdg::BaseDirectories::new();
     let mut string = String::with_capacity(128);
 
-    write!(string, "icons/hicolor/scalable/apps/{}.svg", name).ok()?;
-    if let Some(found_path) = xdg_dirs.find_data_file(&string) {
-        return Some(found_path);
-    }
-
-    for size in ICON_SIZES {
+    for ext in ["svg", "png"] {
         string.clear();
-        write!(string, "icons/hicolor/{}/apps/{}.png", size, name).ok()?;
-        if let Some(found_path) = xdg_dirs.find_data_file(&string) {
-            return Some(found_path);
+        write!(string, "pixmaps/{}.{}", name, ext).ok()?;
+        if let Some(path) = xdg_dirs.find_data_file(&string) {
+            return Some(path);
         }
     }
 
+    // If all else fails
+    println!("Couldn't find icon for {}", name);
     None
 }

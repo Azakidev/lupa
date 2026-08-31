@@ -7,7 +7,7 @@
 
 use adw::{
     gio,
-    glib::{self, WeakRef},
+    glib::{self, Properties, WeakRef},
     prelude::*,
     subclass::prelude::*,
 };
@@ -19,14 +19,16 @@ use std::{
 };
 
 use crate::{
-    application::PikolaunchApplication, components::entry::PikolaunchEntry, providers::app::App,
+    application::PikolaunchApplication, components::entry::PikolaunchEntry,
+    providers::app::discover_apps,
 };
 
 mod imp {
 
     use super::*;
 
-    #[derive(Default, gtk::CompositeTemplate)]
+    #[derive(Default, gtk::CompositeTemplate, Properties)]
+    #[properties(wrapper_type = super::PikolaunchWindow)]
     #[template(file = "src/ui/window.blp")]
     pub struct PikolaunchWindow {
         #[template_child]
@@ -37,6 +39,9 @@ mod imp {
         pub scroller: TemplateChild<gtk::ScrolledWindow>,
         #[template_child]
         pub results: TemplateChild<gtk::Box>,
+
+        #[property(get, set)]
+        pub icon_size: RefCell<u32>,
 
         pub matcher: OnceCell<SkimMatcherV2>,
         pub cache: RefCell<HashMap<String, WeakRef<PikolaunchEntry>>>,
@@ -58,6 +63,17 @@ mod imp {
     }
 
     impl ObjectImpl for PikolaunchWindow {
+        fn properties() -> &'static [glib::ParamSpec] {
+            Self::derived_properties()
+        }
+        fn set_property(&self, id: usize, value: &glib::Value, pspec: &glib::ParamSpec) {
+            Self::derived_set_property(self, id, value, pspec);
+        }
+
+        fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
+            Self::derived_property(self, id, pspec)
+        }
+
         fn constructed(&self) {
             self.parent_constructed();
 
@@ -82,9 +98,10 @@ glib::wrapper! {
 }
 
 impl PikolaunchWindow {
-    pub fn new<P: IsA<gtk::Application>>(application: &P) -> Self {
+    pub fn new<P: IsA<gtk::Application>>(application: &P, icon_size: u32) -> Self {
         let obj: PikolaunchWindow = glib::Object::builder()
             .property("application", application)
+            .property("icon_size", icon_size)
             .build();
 
         let matcher = SkimMatcherV2::default();
@@ -123,7 +140,7 @@ impl PikolaunchWindow {
             #[weak]
             revealer,
             move |i| {
-                let text = i.text().to_string();
+                let text = i.text().trim().to_string();
 
                 if text.is_empty() {
                     obj.shrink();
@@ -159,37 +176,33 @@ impl PikolaunchWindow {
 
         self.clear_results();
 
-        if let Some(app) = self.application().and_downcast::<PikolaunchApplication>() {
-            let apps = app.apps();
+        let mut filtered = cache
+            .iter()
+            .filter(|(a, _)| {
+                query
+                    .to_lowercase()
+                    .chars()
+                    .all(|c| a.to_lowercase().contains(&c.to_string()))
+            })
+            .map(|(a, _)| a.clone())
+            .collect::<Vec<String>>();
 
-            let mut filtered = apps
-                .iter()
-                .filter(|a| {
-                    query
-                        .to_lowercase()
-                        .chars()
-                        .all(|c| a.name.to_lowercase().contains(&c.to_string()))
-                })
-                .cloned()
-                .collect::<Vec<App>>();
+        filtered.sort_unstable_by_key(|a| {
+            matcher.fuzzy_match(&a.to_lowercase(), &query.to_lowercase())
+        });
 
-            filtered.sort_unstable_by_key(|a| {
-                matcher.fuzzy_match(&a.name.to_lowercase(), &query.to_lowercase())
-            });
+        let mut prev: Option<WeakRef<PikolaunchEntry>> = None;
 
-            let mut prev: Option<WeakRef<PikolaunchEntry>> = None;
-
-            for a in filtered.iter().rev() {
-                if let Some(weak) = cache.get(&a.name)
-                    && let Some(entry) = weak.upgrade()
-                {
-                    if let Some(prev_weak) = prev {
-                        results.reorder_child_after(&entry, prev_weak.upgrade().as_ref());
-                    }
-
-                    entry.set_visible(true);
-                    prev = Some(entry.downgrade());
+        for a in filtered.iter().rev() {
+            if let Some(weak) = cache.get(a)
+                && let Some(entry) = weak.upgrade()
+            {
+                if let Some(prev_weak) = prev {
+                    results.reorder_child_after(&entry, prev_weak.upgrade().as_ref());
                 }
+
+                entry.set_visible(true);
+                prev = Some(entry.downgrade());
             }
         }
     }
@@ -205,15 +218,15 @@ impl PikolaunchWindow {
             let mut cache = imp.cache.borrow_mut();
             let results = &imp.results;
 
-            if let Some(app) = obj.application().and_downcast::<PikolaunchApplication>() {
-                let apps = app.apps();
+            let icon_size = obj.icon_size();
 
-                for app in apps {
-                    let entry = PikolaunchEntry::new(app.clone());
-                    results.append(&entry);
+            let apps = discover_apps().unwrap_or_default();
 
-                    cache.insert(app.name.clone(), entry.downgrade());
-                }
+            for app in apps {
+                let entry = PikolaunchEntry::new(app.clone(), icon_size);
+                results.append(&entry);
+
+                cache.insert(app.name, entry.downgrade());
             }
 
             glib::ControlFlow::Break

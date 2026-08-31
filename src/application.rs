@@ -8,11 +8,7 @@
 use adw::{gdk::Display, gio, glib, prelude::*, subclass::prelude::*};
 use std::cell::OnceCell;
 
-use crate::{
-    PikolaunchWindow,
-    config::PikolaunchConfig,
-    providers::app::{App, discover_apps},
-};
+use crate::{PikolaunchWindow, config::PikolaunchConfig};
 
 mod imp {
     use super::*;
@@ -20,9 +16,6 @@ mod imp {
     #[derive(Debug, Default)]
     pub struct PikolaunchApplication {
         pub config: OnceCell<PikolaunchConfig>,
-
-        // Providers
-        pub apps: OnceCell<Vec<App>>,
     }
 
     #[glib::object_subclass]
@@ -39,8 +32,6 @@ mod imp {
             let obj = self.obj();
             obj.setup_gactions();
             obj.set_accels_for_action("app.quit", &["Escape"]);
-
-            obj.load_providers();
         }
     }
 
@@ -50,8 +41,11 @@ mod imp {
             // Get the current window or create one if necessary
             application.load_config_styles();
 
+            let config = application.imp().config.get().unwrap();
+            let icon_size = config.aesthetic.entry_size - 4;
+
             let window = application.active_window().unwrap_or_else(|| {
-                let window = PikolaunchWindow::new(&*application);
+                let window = PikolaunchWindow::new(&*application, icon_size);
                 application.setup_window_config(&window);
                 window.upcast()
             });
@@ -96,10 +90,6 @@ impl PikolaunchApplication {
         self.imp().config.get().unwrap()
     }
 
-    pub fn apps(&self) -> &Vec<App> {
-        self.imp().apps.get().unwrap()
-    }
-
     fn load_config_styles(&self) {
         let provider = gtk::CssProvider::new();
 
@@ -109,7 +99,6 @@ impl PikolaunchApplication {
         let radius = config.aesthetic.radius;
 
         let entry_size = config.aesthetic.entry_size;
-        let img_size = entry_size - 4;
 
         provider.load_from_string(&format!(
             ".launcher {{
@@ -119,11 +108,6 @@ impl PikolaunchApplication {
 
             .launcher_entry {{
                 min-height: {entry_size}px;
-            }}
-
-            .entry_image {{
-                min-height: {img_size}px;
-                min-width:  {img_size}px;
             }}
             "
         ));
@@ -157,12 +141,5 @@ impl PikolaunchApplication {
         };
 
         scroller.set_height_request(size as i32);
-    }
-
-    fn load_providers(&self) {
-        let imp = self.imp();
-
-        let apps = discover_apps().unwrap_or_default();
-        imp.apps.set(apps).expect("Failed to set apps provider");
     }
 }

@@ -68,17 +68,17 @@ glib::wrapper! {
 }
 
 impl PikolaunchEntry {
-    pub fn new(app: App) -> Self {
+    pub fn new(app: App, size: u32) -> Self {
         let obj: PikolaunchEntry = glib::Object::new();
 
         obj.imp().app.set(app).expect("Failed to set app");
-        obj.setup_appearance();
+        obj.setup_appearance(size);
         obj.setup_launch();
 
         obj
     }
 
-    fn setup_appearance(&self) {
+    fn setup_appearance(&self, size: u32) {
         let imp = self.imp();
         let name = &imp.name;
         let comment = &imp.comment;
@@ -99,8 +99,10 @@ impl PikolaunchEntry {
         }
 
         let icon_name = app.icon.clone().unwrap_or_default();
-        let file = find_icon_path(&icon_name);
+        let file = find_icon_path(&icon_name, size);
         icon.set_from_file(file.as_ref());
+        icon.set_width_request(size as i32);
+        icon.set_height_request(size as i32);
     }
 
     fn setup_launch(&self) {

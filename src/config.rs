@@ -87,7 +87,7 @@ impl PikolaunchConfig {
     fn save_default_config() {
         let path = config_path();
 
-        match fs::create_dir_all(&path.replace("conf.toml", "")) {
+        match fs::create_dir_all(path.replace("conf.toml", "")) {
             Ok(_) => {
                 let file = File::create(&path);
 
@@ -129,5 +129,5 @@ fn config_path() -> String {
         },
     };
 
-    return format!("{}/pikolaunch/conf.toml", config_path);
+    format!("{}/pikolaunch/conf.toml", config_path)
 }

@@ -5,11 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-use adw::{
-    glib,
-    prelude::*,
-    subclass::prelude::*,
-};
+use adw::{glib, prelude::*, subclass::prelude::*};
 use std::{
     cell::OnceCell,
     io,
@@ -125,7 +121,7 @@ impl PikolaunchEntry {
                     return;
                 };
 
-                let mut command = Command::new(&binary);
+                let mut command = Command::new(binary);
                 command.args(args);
 
                 if let Err(e) = spawn_with_new_session(&mut command) {

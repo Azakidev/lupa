@@ -7,8 +7,8 @@
 
 mod application;
 mod components;
-mod providers;
 mod config;
+mod providers;
 mod window;
 
 use self::application::PikolaunchApplication;

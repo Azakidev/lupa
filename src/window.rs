@@ -103,10 +103,11 @@ impl PikolaunchWindow {
 
     fn setup_watch_focus(&self) {
         self.connect_is_active_notify(|win| {
-            if let Some(app) = win.application().and_downcast::<PikolaunchApplication>() {
-                if !win.is_active() && app.config().beavior.close_when_unfocused {
-                    app.quit();
-                }
+            if let Some(app) = win.application().and_downcast::<PikolaunchApplication>()
+                && !win.is_active()
+                && app.config().beavior.close_when_unfocused
+            {
+                app.quit();
             }
         });
     }
@@ -124,7 +125,7 @@ impl PikolaunchWindow {
             move |i| {
                 let text = i.text().to_string();
 
-                if text.len() == 0 {
+                if text.is_empty() {
                     obj.shrink();
                     revealer.set_reveal_child(false);
                 } else {
@@ -169,7 +170,7 @@ impl PikolaunchWindow {
                         .chars()
                         .all(|c| a.name.to_lowercase().contains(&c.to_string()))
                 })
-                .map(|a| a.clone())
+                .cloned()
                 .collect::<Vec<App>>();
 
             filtered.sort_unstable_by_key(|a| {

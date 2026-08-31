@@ -21,7 +21,7 @@ pub struct App {
     pub exec: String,
     pub comment: Option<String>,
     pub icon: Option<String>,
-    pub is_flatpak: bool
+    pub is_flatpak: bool,
 }
 
 pub fn discover_apps() -> Option<Vec<App>> {
@@ -94,8 +94,8 @@ fn parse_desktop_entry(content: &str, current_desktop: &str, is_flatpak: bool) -
             continue;
         }
 
-        if in_main_section {
-            if let Some((key, value)) = line.split_once('=') {
+        if in_main_section
+            && let Some((key, value)) = line.split_once('=') {
                 let key = key.trim();
                 let value = value.trim();
 
@@ -140,7 +140,6 @@ fn parse_desktop_entry(content: &str, current_desktop: &str, is_flatpak: bool) -
                     _ => {}
                 }
             }
-        }
     }
 
     if !should_hide && has_name && has_exec && has_type {

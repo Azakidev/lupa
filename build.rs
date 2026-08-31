@@ -50,7 +50,7 @@ fn main() {
         let pot_path = po_dir.join(format!("{}.pot", GETTEXT_PACKAGE));
 
         let mut cmd = Command::new("xgettext");
-        cmd.args(&[
+        cmd.args([
             "--from-code=UTF-8",
             "--keyword=_",
             "--language=C", // Treats .blp / Rust string syntax correctly
@@ -84,7 +84,7 @@ fn main() {
                 let mo_path = lang_locale_dir.join(format!("{}.mo", GETTEXT_PACKAGE));
 
                 let status = Command::new("msgfmt")
-                    .args(&["-o", mo_path.to_str().unwrap(), path.to_str().unwrap()])
+                    .args(["-o", mo_path.to_str().unwrap(), path.to_str().unwrap()])
                     .status()
                     .expect("Failed to execute msgfmt.");
 

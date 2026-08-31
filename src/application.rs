@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: MIT
  */
 
-use adw::{gio, glib, prelude::*, subclass::prelude::*};
-use gtk::gdk::Display;
+use adw::{gdk::Display, gio, glib, prelude::*, subclass::prelude::*};
+use std::cell::OnceCell;
 
 use crate::{
     PikolaunchWindow,
@@ -15,11 +15,6 @@ use crate::{
 };
 
 mod imp {
-
-    use std::cell::OnceCell;
-
-    use crate::{config::PikolaunchConfig, providers::app::App};
-
     use super::*;
 
     #[derive(Debug, Default)]
@@ -151,6 +146,11 @@ impl PikolaunchApplication {
 
         let is_exact = entries.fract() == 0.;
 
+        // Calculates the spacing of the ScrolledWindow so the following things are true:
+        // - Each entry is as big as the user configured
+        // - There as as many entries visible as the user configured
+        // - If the number of visible is round it'll add a small padding so the last entry has
+        //   some breathing room
         let mut size = (entry_size as f32 * entries) + (2.0 * entries);
         if is_exact {
             size += 4.0

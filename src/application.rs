@@ -148,7 +148,15 @@ impl PikolaunchApplication {
 
         let entry_size = config.aesthetic.entry_size;
         let entries = config.aesthetic.entries;
-        scroller.set_height_request((entry_size * entries) as i32);
+
+        let is_exact = entries.fract() == 0.;
+
+        let mut size = (entry_size as f32 * entries) + (2.0 * entries);
+        if is_exact {
+            size += 4.0
+        };
+
+        scroller.set_height_request(size as i32);
     }
 
     fn load_providers(&self) {

@@ -14,14 +14,22 @@ mod window;
 use self::application::PikolaunchApplication;
 use self::window::PikolaunchWindow;
 
-use config::{GETTEXT_PACKAGE, LOCALEDIR};
 use gettextrs::{bind_textdomain_codeset, bindtextdomain, textdomain};
 use gtk::prelude::*;
 use gtk::{gio, glib};
 
+static GETTEXT_PACKAGE: &str = "pikolaunch";
+
 fn main() -> glib::ExitCode {
     // Set up gettext translations
-    bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR).expect("Unable to bind the text domain");
+
+    let locale_dir = if cfg!(debug_assertions) {
+        format!("{}/locale", env!("OUT_DIR"))
+    } else {
+        "/usr/share/locale".to_string()
+    };
+
+    bindtextdomain(GETTEXT_PACKAGE, locale_dir).expect("Unable to bind the text domain");
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8")
         .expect("Unable to set the text domain encoding");
     textdomain(GETTEXT_PACKAGE).expect("Unable to switch to the text domain");

@@ -9,7 +9,7 @@
 # radius=12 # Integer (Default: 12, Range [0-u32 limit])
 
 # The amount of visible entries
-# entries=5 # Integer (Default: 5, Range: [0–u32 limit])
+# entries=5.0 # Float (Default: 5.0, Range: [0–f32 limit])
 
 # The height of each entry
 # entry_size=64 # Integer (Default: 64, Range: [0–u32 limit])

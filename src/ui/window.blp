@@ -10,16 +10,14 @@ template $PikolaunchWindow: Adw.ApplicationWindow {
     ]
 
     Box {
-        margin-start: 8;
-        margin-end: 8;
         margin-top: 8;
-        margin-bottom: 8;
         orientation: vertical;
 
         Box {
             orientation: horizontal;
-            margin-start: 8;
-            spacing: 8;
+            spacing: 4;
+            margin-start: 16;
+            margin-bottom: 8;
 
             Image {
                 icon-name: "search";
@@ -31,6 +29,12 @@ template $PikolaunchWindow: Adw.ApplicationWindow {
             }
 
             Entry input {
+                margin-start: 8;
+                margin-end: 8;
+                hexpand: true;
+                vexpand: true;
+                valign: center;
+
                 styles [
                     "flat",
                     "searcher",
@@ -38,20 +42,29 @@ template $PikolaunchWindow: Adw.ApplicationWindow {
 
                 text: _("");
                 placeholder-text: _("Search anything…");
-                hexpand: true;
-                vexpand: true;
             }
         }
 
         Revealer result_revealer {
-            // TODO
             reveal-child: false;
 
-            Separator {}
+            Box {
+                orientation: vertical;
 
-            ScrolledWindow scroller {
-                Box results {
-                    orientation: vertical;
+                Separator {
+                    orientation: horizontal;
+                    hexpand: true;
+                }
+
+                ScrolledWindow scroller {
+                    hscrollbar-policy: never;
+
+                    Box results {
+                        orientation: vertical;
+                        margin-top: 4;
+                        margin-bottom: 8;
+                        spacing: 2;
+                    }
                 }
             }
         }

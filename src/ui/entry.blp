@@ -1,0 +1,74 @@
+using Gtk 4.0;
+
+template $PikolaunchEntry: Button {
+    margin-start: 8;
+    margin-end: 8;
+    visible: false;
+    hexpand: true;
+
+    styles [
+        "card",
+        "launcher_entry",
+    ]
+
+    Box {
+        orientation: horizontal;
+        hexpand: true;
+        spacing: 8;
+
+        Image icon {
+            icon-size: large;
+
+            styles [
+                "entry_image",
+            ]
+
+            accessibility {
+                label: _("Icon");
+            }
+        }
+
+        Box labels {
+            orientation: vertical;
+            spacing: 2;
+            margin-end: 16;
+            halign: start;
+            hexpand: true;
+            valign: center;
+
+            Label name {
+                halign: start;
+                lines: 1;
+                ellipsize: end;
+
+                styles [
+                    "heading",
+                ]
+            }
+
+            Label comment {
+                halign: start;
+                lines: 1;
+                ellipsize: end;
+
+                styles [
+                    "dimmed",
+                ]
+            }
+        }
+
+        Image flatpak {
+            margin-end: 12;
+            visible: false;
+            icon-name: "folder-flatpak-symbolic";
+
+            styles [
+                "flatpak",
+            ]
+
+            accessibility {
+                label: "Flatpak";
+            }
+        }
+    }
+}

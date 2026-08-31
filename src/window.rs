@@ -19,8 +19,7 @@ use std::{
 };
 
 use crate::{
-    application::PikolaunchApplication,
-    providers::app::{App, find_icon_path},
+    application::PikolaunchApplication, components::entry::PikolaunchEntry, providers::app::App,
 };
 
 mod imp {
@@ -40,7 +39,7 @@ mod imp {
         pub results: TemplateChild<gtk::Box>,
 
         pub matcher: OnceCell<SkimMatcherV2>,
-        pub cache: RefCell<HashMap<String, WeakRef<gtk::Box>>>,
+        pub cache: RefCell<HashMap<String, WeakRef<PikolaunchEntry>>>,
     }
 
     #[glib::object_subclass]
@@ -154,6 +153,7 @@ impl PikolaunchWindow {
     fn update_results(&self, query: &str) {
         let imp = self.imp();
         let cache = imp.cache.borrow();
+        let results = imp.results.get();
         let matcher = imp.matcher.get().unwrap();
 
         self.clear_results();
@@ -176,13 +176,20 @@ impl PikolaunchWindow {
                 matcher.fuzzy_match(&a.name.to_lowercase(), &query.to_lowercase())
             });
 
-            filtered.iter().rev().for_each(|a| {
+            let mut prev: Option<WeakRef<PikolaunchEntry>> = None;
+
+            for a in filtered.iter().rev() {
                 if let Some(weak) = cache.get(&a.name)
                     && let Some(entry) = weak.upgrade()
                 {
+                    if let Some(prev_weak) = prev {
+                        results.reorder_child_after(&entry, prev_weak.upgrade().as_ref());
+                    }
+
                     entry.set_visible(true);
+                    prev = Some(entry.downgrade());
                 }
-            });
+            }
         }
     }
 
@@ -201,25 +208,10 @@ impl PikolaunchWindow {
                 let apps = app.apps();
 
                 for app in apps {
-                    // TODO: Replace with entry widget constructor
-                    let icon_name = app.icon.clone().unwrap_or_default();
-                    let file = find_icon_path(&icon_name);
-                    let image = gtk::Image::from_file(file.unwrap_or_default());
-                    image.add_css_class("entry_image");
-                    image.set_icon_size(gtk::IconSize::Large);
+                    let entry = PikolaunchEntry::new(app.clone());
+                    results.append(&entry);
 
-                    let label = gtk::Label::new(Some(&app.name));
-
-                    let cont = gtk::Box::new(gtk::Orientation::Horizontal, 8);
-                    cont.set_hexpand(true);
-                    cont.append(&image);
-                    cont.append(&label);
-                    cont.add_css_class("launcher_entry");
-                    cont.set_visible(false);
-
-                    results.append(&cont);
-
-                    cache.insert(app.name.clone(), cont.downgrade());
+                    cache.insert(app.name.clone(), entry.downgrade());
                 }
             }
 

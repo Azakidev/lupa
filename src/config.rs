@@ -13,10 +13,6 @@ use std::{
     io::Write,
 };
 
-// COMPILE TIME CONSTANTS
-pub static GETTEXT_PACKAGE: &str = "pikolaunch";
-pub static LOCALEDIR: &str = "/app/share/locale";
-
 pub static DEFAULT_CONFIG: &str = include_str!("../data/default.toml");
 
 // Configuration file definition
@@ -36,7 +32,7 @@ pub struct PikolaunchConfig {
 pub struct Aesthetic {
     pub opacity: f32,
     pub radius: u32,
-    pub entries: u32,
+    pub entries: f32,
     pub entry_size: u32,
 }
 
@@ -45,7 +41,7 @@ impl Default for Aesthetic {
         Self {
             opacity: 1.0,
             radius: 12,
-            entries: 5,
+            entries: 5.0,
             entry_size: 64,
         }
     }

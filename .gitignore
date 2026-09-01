@@ -1,2 +1,6 @@
+# Build output
 target/
+
+# Localization
+po/*.pot
 po/*.po~

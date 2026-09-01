@@ -10,8 +10,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-31 17:13+0200\n"
-"PO-Revision-Date: 2026-08-31 17:52+0200\n"
+"POT-Creation-Date: 2026-09-01 02:50+0200\n"
+"PO-Revision-Date: 2026-09-01 03:09+0200\n"
 "Last-Translator: FatDawlf <zazaguichi@outlook.com>\n"
 "Language-Team: Spanish\n"
 "Language: es\n"
@@ -32,3 +32,7 @@ msgstr "Busca lo que sea…"
 #: src/ui/entry.blp:27
 msgid "Icon"
 msgstr "Icono"
+
+#: src/application.rs:45
+msgid "Print the default configuration"
+msgstr "Imprime la configuración por defecto"

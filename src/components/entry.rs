@@ -6,14 +6,12 @@
  */
 
 use adw::{glib, prelude::*, subclass::prelude::*};
-use std::{
-    cell::OnceCell,
-    io,
-    os::unix::process::CommandExt,
-    process::{Child, Command, Stdio},
-};
+use std::{cell::OnceCell, process::Command};
 
-use crate::providers::app::{App, find_icon_path};
+use crate::{
+    providers::app::{App, find_icon_path},
+    utils::spawn_with_new_session,
+};
 
 mod imp {
 
@@ -68,17 +66,32 @@ glib::wrapper! {
 }
 
 impl PikolaunchEntry {
-    pub fn new(app: App, size: u32) -> Self {
+    pub fn new_app(app: App, size: u32) -> Self {
         let obj: PikolaunchEntry = glib::Object::new();
 
         obj.imp().app.set(app).expect("Failed to set app");
-        obj.setup_appearance(size);
-        obj.setup_launch();
+        obj.setup_appearance_app(size);
+        obj.setup_launch_app();
 
         obj
     }
 
-    fn setup_appearance(&self, size: u32) {
+    pub fn new_raw<F: Fn() + 'static>(
+        title: &str,
+        subtitle: Option<&str>,
+        icon_name: Option<&str>,
+        size: Option<u32>,
+        action: F,
+    ) -> Self {
+        let obj: PikolaunchEntry = glib::Object::new();
+
+        obj.setup_appearance_raw(title, subtitle, icon_name, size);
+        obj.setup_launch_raw(action);
+
+        obj
+    }
+
+    fn setup_appearance_app(&self, size: u32) {
         let imp = self.imp();
         let name = &imp.name;
         let comment = &imp.comment;
@@ -105,14 +118,45 @@ impl PikolaunchEntry {
         icon.set_height_request(size as i32);
     }
 
-    fn setup_launch(&self) {
+    fn setup_appearance_raw(
+        &self,
+        title: &str,
+        subtitle: Option<&str>,
+        icon_name: Option<&str>,
+        size: Option<u32>,
+    ) {
+        let imp = self.imp();
+        let name = &imp.name;
+        let comment = &imp.comment;
+        let icon = &imp.icon;
+
+        name.set_text(title);
+
+        if let Some(txt) = subtitle {
+            comment.set_text(txt);
+        } else {
+            comment.set_visible(false);
+        }
+
+        if icon_name.is_some()
+            && let Some(size) = size
+        {
+            icon.set_icon_name(icon_name);
+            icon.set_width_request(size as i32);
+            icon.set_height_request(size as i32);
+        } else {
+            icon.set_visible(false);
+        }
+    }
+
+    fn setup_launch_app(&self) {
         let imp = self.imp();
         let app = imp.app.get().unwrap();
 
         self.connect_activate(glib::clone!(
             #[strong]
             app,
-            move |b| {
+            move |btn| {
                 let raw_command: Vec<_> = app
                     .exec
                     .split_whitespace()
@@ -131,27 +175,12 @@ impl PikolaunchEntry {
                     return;
                 }
 
-                let _ = b.activate_action("app.quit", None);
+                let _ = btn.activate_action("app.quit", None);
             }
         ));
     }
-}
 
-fn spawn_with_new_session(command: &mut Command) -> io::Result<Child> {
-    command
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null());
-
-    // SAFETY: We are in the "fork-exec gap".
-    // We avoid heap allocation and use only async-signal-safe calls.
-    unsafe {
-        command.pre_exec(|| {
-            nix::unistd::setsid()
-                .map(|_| ())
-                .map_err(|e| io::Error::from_raw_os_error(e as i32))
-        });
+    fn setup_launch_raw<F: Fn() + 'static>(&self, closure: F) {
+        self.connect_activate(move |_| closure());
     }
-
-    command.spawn()
 }

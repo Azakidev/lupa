@@ -6,6 +6,7 @@
  */
 
 use std::{
+    collections::HashMap,
     env::var,
     eprintln,
     fmt::Write,
@@ -13,7 +14,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
+use gtk::{glib::WeakRef, prelude::*};
 use icon_finder::find_icon;
+
+use crate::components::entry::PikolaunchEntry;
 
 #[derive(Debug, Default, Clone)]
 pub struct App {
@@ -30,14 +35,24 @@ pub fn discover_apps() -> Option<Vec<App>> {
         return None;
     };
 
+    let Ok(home) = var("HOME") else {
+        eprintln!("[Error] Could not find user home, is HOME set?");
+        return None;
+    };
+
     let Ok(desktop) = var("XDG_CURRENT_DESKTOP") else {
         eprintln!("[Error] Could not detect desktop, is XDG_CURRENT_DESKTOP set?");
         return None;
     };
 
+    let user_data_path = Path::new(&home).join(".local/share");
+
     let mut apps: Vec<App> = Vec::new();
 
-    for path in locations.split(":") {
+    for path in locations
+        .split(":")
+        .chain([user_data_path.to_str().unwrap()])
+    {
         let app_dir = Path::new(path).join("applications");
 
         let is_flatpak = path.contains("flatpak");
@@ -176,4 +191,41 @@ pub fn find_icon_path(name: &str, size: u32) -> Option<PathBuf> {
     // If all else fails
     println!("Couldn't find icon for {}", name);
     None
+}
+
+pub fn update_app_results(
+    query: &str,
+    cache: &HashMap<String, WeakRef<PikolaunchEntry>>,
+    results: &gtk::Box,
+    matcher: &SkimMatcherV2,
+) {
+    let mut filtered = cache
+        .keys()
+        .filter(|a| {
+            query
+                .to_lowercase()
+                .chars()
+                .map(|c| c.to_string())
+                .all(|c| a.to_lowercase().contains(&c))
+        })
+        .cloned()
+        .collect::<Vec<String>>();
+
+    filtered
+        .sort_unstable_by_key(|a| matcher.fuzzy_match(&a.to_lowercase(), &query.to_lowercase()));
+
+    let mut prev: Option<WeakRef<PikolaunchEntry>> = None;
+
+    for a in filtered.iter().rev() {
+        if let Some(weak) = cache.get(a)
+            && let Some(entry) = weak.upgrade()
+        {
+            if let Some(prev_weak) = prev {
+                results.reorder_child_after(&entry, prev_weak.upgrade().as_ref());
+            }
+
+            entry.set_visible(true);
+            prev = Some(entry.downgrade());
+        }
+    }
 }

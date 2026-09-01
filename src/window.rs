@@ -11,7 +11,8 @@ use adw::{
     prelude::*,
     subclass::prelude::*,
 };
-use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
+use fuzzy_matcher::skim::SkimMatcherV2;
+use gtk::glib::property::PropertySet;
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 use std::{
     cell::{OnceCell, RefCell},
@@ -19,8 +20,14 @@ use std::{
 };
 
 use crate::{
-    application::PikolaunchApplication, components::entry::PikolaunchEntry,
-    providers::app::discover_apps,
+    application::PikolaunchApplication,
+    components::entry::PikolaunchEntry,
+    providers::{
+        app::{discover_apps, update_app_results},
+        calc::update_calc_results,
+        file::update_file_search_results,
+    },
+    utils::first_visible_child,
 };
 
 mod imp {
@@ -45,6 +52,9 @@ mod imp {
 
         pub matcher: OnceCell<SkimMatcherV2>,
         pub cache: RefCell<HashMap<String, WeakRef<PikolaunchEntry>>>,
+
+        pub calc_entry: RefCell<Option<WeakRef<PikolaunchEntry>>>,
+        pub files_cache: RefCell<HashMap<String, WeakRef<PikolaunchEntry>>>,
     }
 
     #[glib::object_subclass]
@@ -106,8 +116,13 @@ impl PikolaunchWindow {
 
         let matcher = SkimMatcherV2::default();
         let _ = obj.imp().matcher.set(matcher);
+        obj.imp().files_cache.set(HashMap::new());
 
         obj
+    }
+
+    fn shrink(&self) {
+        self.set_default_size(600, 48);
     }
 
     fn setup_layer(&self) {
@@ -118,13 +133,39 @@ impl PikolaunchWindow {
         self.set_keyboard_mode(KeyboardMode::OnDemand);
     }
 
+    fn setup_app_entries(&self) {
+        let weak = self.downgrade();
+        glib::spawn_future_local(async move {
+            let Some(obj) = weak.upgrade() else {
+                return glib::ControlFlow::Break;
+            };
+
+            let imp = obj.imp();
+            let mut cache = imp.cache.borrow_mut();
+            let results = &imp.results;
+
+            let icon_size = obj.icon_size();
+
+            let apps = discover_apps().unwrap_or_default();
+
+            for app in apps {
+                let entry = PikolaunchEntry::new_app(app.clone(), icon_size);
+                results.append(&entry);
+
+                cache.insert(app.name, entry.downgrade());
+            }
+
+            glib::ControlFlow::Break
+        });
+    }
+
     fn setup_watch_focus(&self) {
         self.connect_is_active_notify(|win| {
             if let Some(app) = win.application().and_downcast::<PikolaunchApplication>()
                 && !win.is_active()
                 && app.config().beavior.close_when_unfocused
             {
-                app.quit();
+                win.close();
             }
         });
     }
@@ -133,6 +174,7 @@ impl PikolaunchWindow {
         let imp = self.imp();
         let input = imp.input.get();
         let revealer = imp.result_revealer.get();
+        let results = imp.results.get();
 
         input.connect_text_notify(glib::clone!(
             #[weak(rename_to=obj)]
@@ -152,14 +194,29 @@ impl PikolaunchWindow {
                 obj.update_results(&text);
             }
         ));
-    }
 
-    fn shrink(&self) {
-        self.set_default_size(600, 48);
+        input.connect_activate(glib::clone!(
+            #[weak]
+            results,
+            move |_| {
+                if let Some(entry) = first_visible_child(&results).and_downcast::<PikolaunchEntry>()
+                {
+                    entry.activate();
+                }
+            }
+        ));
     }
 
     fn clear_results(&self) {
         let imp = self.imp();
+        let results = &imp.results;
+        let calc_entry = imp.calc_entry.borrow();
+
+        if let Some(weak) = calc_entry.as_ref()
+            && let Some(entry) = weak.upgrade()
+        {
+            results.remove(&entry);
+        };
 
         imp.cache.borrow().iter().for_each(|(_, e)| {
             if let Some(entry) = e.upgrade() {
@@ -171,65 +228,47 @@ impl PikolaunchWindow {
     fn update_results(&self, query: &str) {
         let imp = self.imp();
         let cache = imp.cache.borrow();
+        let mut file_cache = imp.files_cache.borrow_mut();
+        let calc_entry = &imp.calc_entry;
         let results = imp.results.get();
         let matcher = imp.matcher.get().unwrap();
 
         self.clear_results();
 
-        let mut filtered = cache
-            .iter()
-            .filter(|(a, _)| {
-                query
-                    .to_lowercase()
-                    .chars()
-                    .all(|c| a.to_lowercase().contains(&c.to_string()))
-            })
-            .map(|(a, _)| a.clone())
-            .collect::<Vec<String>>();
+        match query {
+            q if q.starts_with("/") => {
+                update_file_search_results(
+                    q.strip_prefix("/").unwrap(),
+                    &mut file_cache,
+                    self,
+                    &results,
+                    self.icon_size(),
+                );
+            }
+            q if q.starts_with("=") => {
+                if let Some(entry) =
+                    update_calc_results(query.strip_prefix("=").unwrap(), self.icon_size(), self)
+                {
+                    results.prepend(&entry);
+                    calc_entry.replace(Some(entry.downgrade()));
+                };
+            }
+            q if q.starts_with("#") => {
+                // Explicit to applications
+                update_app_results(q.strip_prefix("#").unwrap(), &cache, &results, matcher);
+            }
+            _ => {
+                update_app_results(query, &cache, &results, matcher);
 
-        filtered.sort_unstable_by_key(|a| {
-            matcher.fuzzy_match(&a.to_lowercase(), &query.to_lowercase())
-        });
-
-        let mut prev: Option<WeakRef<PikolaunchEntry>> = None;
-
-        for a in filtered.iter().rev() {
-            if let Some(weak) = cache.get(a)
-                && let Some(entry) = weak.upgrade()
-            {
-                if let Some(prev_weak) = prev {
-                    results.reorder_child_after(&entry, prev_weak.upgrade().as_ref());
-                }
-
-                entry.set_visible(true);
-                prev = Some(entry.downgrade());
+                if let Some(entry) = update_calc_results(
+                    query.strip_prefix("=").unwrap_or(query),
+                    self.icon_size(),
+                    self,
+                ) {
+                    results.prepend(&entry);
+                    calc_entry.replace(Some(entry.downgrade()));
+                };
             }
         }
-    }
-
-    fn setup_app_entries(&self) {
-        let weak = self.downgrade();
-        glib::spawn_future_local(async move {
-            let Some(obj) = weak.upgrade() else {
-                return glib::ControlFlow::Break;
-            };
-
-            let imp = obj.imp();
-            let mut cache = imp.cache.borrow_mut();
-            let results = &imp.results;
-
-            let icon_size = obj.icon_size();
-
-            let apps = discover_apps().unwrap_or_default();
-
-            for app in apps {
-                let entry = PikolaunchEntry::new(app.clone(), icon_size);
-                results.append(&entry);
-
-                cache.insert(app.name, entry.downgrade());
-            }
-
-            glib::ControlFlow::Break
-        });
     }
 }

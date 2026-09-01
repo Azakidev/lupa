@@ -9,6 +9,7 @@ mod application;
 mod components;
 mod config;
 mod providers;
+mod utils;
 mod window;
 
 use self::application::PikolaunchApplication;

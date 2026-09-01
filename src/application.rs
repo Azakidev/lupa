@@ -11,6 +11,10 @@ use std::cell::OnceCell;
 use crate::{PikolaunchWindow, config::PikolaunchConfig};
 
 mod imp {
+    use gettextrs::gettext;
+
+    use crate::config::DEFAULT_CONFIG;
+
     use super::*;
 
     #[derive(Debug, Default)]
@@ -32,6 +36,15 @@ mod imp {
             let obj = self.obj();
             obj.setup_gactions();
             obj.set_accels_for_action("app.quit", &["Escape"]);
+
+            obj.add_main_option(
+                "default-config",
+                glib::Char::from(b'd'),
+                glib::OptionFlags::NONE,
+                glib::OptionArg::None,
+                &gettext("Print the default configuration"),
+                None,
+            );
         }
     }
 
@@ -51,6 +64,18 @@ mod imp {
             });
 
             window.present();
+        }
+
+        fn handle_local_options(
+            &self,
+            options: &glib::VariantDict,
+        ) -> std::ops::ControlFlow<glib::ExitCode> {
+            if options.lookup_value("default-config", None).is_some() {
+                println!("{}", DEFAULT_CONFIG);
+                self.obj().quit();
+            }
+
+            std::ops::ControlFlow::Continue(())
         }
     }
 

@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: MIT
  */
 
+pub mod provider;
+
 pub mod app;
 pub mod calc;
 pub mod file;

@@ -7,26 +7,17 @@
 
 use adw::{
     gio,
-    glib::{self, Properties, WeakRef},
+    glib::{self, Properties},
     prelude::*,
     subclass::prelude::*,
 };
-use fuzzy_matcher::skim::SkimMatcherV2;
-use gtk::glib::property::PropertySet;
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
-use std::{
-    cell::{OnceCell, RefCell},
-    collections::HashMap,
-};
+use std::cell::RefCell;
 
 use crate::{
     application::PikolaunchApplication,
     components::entry::PikolaunchEntry,
-    providers::{
-        app::{discover_apps, update_app_results},
-        calc::update_calc_results,
-        file::update_file_search_results,
-    },
+    providers::{app::AppProvider, calc::CalcProvider, file::FileProvider, provider::Provider},
     utils::first_visible_child,
 };
 
@@ -50,11 +41,10 @@ mod imp {
         #[property(get, set)]
         pub icon_size: RefCell<u32>,
 
-        pub matcher: OnceCell<SkimMatcherV2>,
-        pub cache: RefCell<HashMap<String, WeakRef<PikolaunchEntry>>>,
-
-        pub calc_entry: RefCell<Option<WeakRef<PikolaunchEntry>>>,
-        pub files_cache: RefCell<HashMap<String, WeakRef<PikolaunchEntry>>>,
+        // Providers
+        pub app_provider: AppProvider,
+        pub calc_provider: CalcProvider,
+        pub file_provider: FileProvider,
     }
 
     #[glib::object_subclass]
@@ -88,10 +78,10 @@ mod imp {
             self.parent_constructed();
 
             let obj = self.obj();
+            obj.setup_providers();
             obj.setup_layer();
             obj.setup_watch_focus();
             obj.setup_input();
-            obj.setup_app_entries();
         }
     }
 
@@ -109,16 +99,10 @@ glib::wrapper! {
 
 impl PikolaunchWindow {
     pub fn new<P: IsA<gtk::Application>>(application: &P, icon_size: u32) -> Self {
-        let obj: PikolaunchWindow = glib::Object::builder()
+        glib::Object::builder()
             .property("application", application)
             .property("icon_size", icon_size)
-            .build();
-
-        let matcher = SkimMatcherV2::default();
-        let _ = obj.imp().matcher.set(matcher);
-        obj.imp().files_cache.set(HashMap::new());
-
-        obj
+            .build()
     }
 
     fn shrink(&self) {
@@ -133,30 +117,18 @@ impl PikolaunchWindow {
         self.set_keyboard_mode(KeyboardMode::OnDemand);
     }
 
-    fn setup_app_entries(&self) {
-        let weak = self.downgrade();
-        glib::spawn_future_local(async move {
-            let Some(obj) = weak.upgrade() else {
-                return glib::ControlFlow::Break;
-            };
+    fn setup_providers(&self) {
+        glib::spawn_future_local(glib::clone!(
+            #[weak(rename_to=win)]
+            self,
+            async move {
+                let imp = win.imp();
 
-            let imp = obj.imp();
-            let mut cache = imp.cache.borrow_mut();
-            let results = &imp.results;
-
-            let icon_size = obj.icon_size();
-
-            let apps = discover_apps().unwrap_or_default();
-
-            for app in apps {
-                let entry = PikolaunchEntry::new_app(app.clone(), icon_size);
-                results.append(&entry);
-
-                cache.insert(app.name, entry.downgrade());
+                imp.app_provider.prepare(&win);
+                imp.calc_provider.prepare(&win);
+                imp.file_provider.prepare(&win);
             }
-
-            glib::ControlFlow::Break
-        });
+        ));
     }
 
     fn setup_watch_focus(&self) {
@@ -209,65 +181,32 @@ impl PikolaunchWindow {
 
     fn clear_results(&self) {
         let imp = self.imp();
-        let results = &imp.results;
-        let calc_entry = imp.calc_entry.borrow();
 
-        if let Some(weak) = calc_entry.as_ref()
-            && let Some(entry) = weak.upgrade()
-        {
-            results.remove(&entry);
-        };
-
-        imp.cache.borrow().iter().for_each(|(_, e)| {
-            if let Some(entry) = e.upgrade() {
-                entry.set_visible(false);
-            };
-        });
+        imp.app_provider.hide_entries();
+        imp.calc_provider.hide_entries();
+        imp.file_provider.hide_entries();
     }
 
     fn update_results(&self, query: &str) {
         let imp = self.imp();
-        let cache = imp.cache.borrow();
-        let mut file_cache = imp.files_cache.borrow_mut();
-        let calc_entry = &imp.calc_entry;
-        let results = imp.results.get();
-        let matcher = imp.matcher.get().unwrap();
 
         self.clear_results();
 
         match query {
-            q if q.starts_with("/") => {
-                update_file_search_results(
-                    q.strip_prefix("/").unwrap(),
-                    &mut file_cache,
-                    self,
-                    &results,
-                    self.icon_size(),
-                );
+            q if q.starts_with(FileProvider::PREFIX) => {
+                imp.file_provider.update_entries(query, self);
             }
-            q if q.starts_with("=") => {
-                if let Some(entry) =
-                    update_calc_results(query.strip_prefix("=").unwrap(), self.icon_size(), self)
-                {
-                    results.prepend(&entry);
-                    calc_entry.replace(Some(entry.downgrade()));
-                };
+            q if q.starts_with(CalcProvider::PREFIX) => {
+                imp.calc_provider.update_entries(query, self);
             }
-            q if q.starts_with("#") => {
-                // Explicit to applications
-                update_app_results(q.strip_prefix("#").unwrap(), &cache, &results, matcher);
+            q if q.starts_with(AppProvider::PREFIX) => {
+                imp.app_provider.update_entries(query, self);
             }
+            // Run all if no prefix is selected
             _ => {
-                update_app_results(query, &cache, &results, matcher);
-
-                if let Some(entry) = update_calc_results(
-                    query.strip_prefix("=").unwrap_or(query),
-                    self.icon_size(),
-                    self,
-                ) {
-                    results.prepend(&entry);
-                    calc_entry.replace(Some(entry.downgrade()));
-                };
+                imp.app_provider.update_entries(query, self);
+                imp.calc_provider.update_entries(query, self);
+                imp.file_provider.update_entries(query, self);
             }
         }
     }

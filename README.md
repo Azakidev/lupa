@@ -1,4 +1,4 @@
-# Pikolaunch
+# Lupa
 
 A minimalist launcher built with gtk4-layer-shell and rust.
 
@@ -13,4 +13,4 @@ A minimalist launcher built with gtk4-layer-shell and rust.
     - [x] Calculator
         - [ ] A better icon for entry
     - [x] Files (localsearch)
-        - [ ] Icon detection and/or thumbnails
+        - [x] Icon detection and/or thumbnails

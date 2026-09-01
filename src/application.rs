@@ -8,7 +8,7 @@
 use adw::{gdk::Display, gio, glib, prelude::*, subclass::prelude::*};
 use std::cell::OnceCell;
 
-use crate::{PikolaunchWindow, config::PikolaunchConfig};
+use crate::{LupaWindow, config::LupaConfig};
 
 mod imp {
     use gettextrs::gettext;
@@ -18,18 +18,18 @@ mod imp {
     use super::*;
 
     #[derive(Debug, Default)]
-    pub struct PikolaunchApplication {
-        pub config: OnceCell<PikolaunchConfig>,
+    pub struct LupaApplication {
+        pub config: OnceCell<LupaConfig>,
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for PikolaunchApplication {
-        const NAME: &'static str = "PikolaunchApplication";
-        type Type = super::PikolaunchApplication;
+    impl ObjectSubclass for LupaApplication {
+        const NAME: &'static str = "LupaApplication";
+        type Type = super::LupaApplication;
         type ParentType = adw::Application;
     }
 
-    impl ObjectImpl for PikolaunchApplication {
+    impl ObjectImpl for LupaApplication {
         fn constructed(&self) {
             self.parent_constructed();
 
@@ -48,7 +48,7 @@ mod imp {
         }
     }
 
-    impl ApplicationImpl for PikolaunchApplication {
+    impl ApplicationImpl for LupaApplication {
         fn activate(&self) {
             let application = self.obj();
             // Get the current window or create one if necessary
@@ -58,7 +58,7 @@ mod imp {
             let icon_size = config.aesthetic.entry_size - 4;
 
             let window = application.active_window().unwrap_or_else(|| {
-                let window = PikolaunchWindow::new(&*application, icon_size);
+                let window = LupaWindow::new(&*application, icon_size);
                 application.setup_window_config(&window);
                 window.upcast()
             });
@@ -79,25 +79,25 @@ mod imp {
         }
     }
 
-    impl GtkApplicationImpl for PikolaunchApplication {}
-    impl AdwApplicationImpl for PikolaunchApplication {}
+    impl GtkApplicationImpl for LupaApplication {}
+    impl AdwApplicationImpl for LupaApplication {}
 }
 
 glib::wrapper! {
-    pub struct PikolaunchApplication(ObjectSubclass<imp::PikolaunchApplication>)
+    pub struct LupaApplication(ObjectSubclass<imp::LupaApplication>)
         @extends gio::Application, gtk::Application, adw::Application,
         @implements gio::ActionGroup, gio::ActionMap;
 }
 
-impl PikolaunchApplication {
+impl LupaApplication {
     pub fn new(application_id: &str, flags: &gio::ApplicationFlags) -> Self {
-        let app: PikolaunchApplication = glib::Object::builder()
+        let app: LupaApplication = glib::Object::builder()
             .property("application-id", application_id)
             .property("flags", flags)
-            .property("resource-base-path", "/art/fatdawlf/Pikolaunch")
+            .property("resource-base-path", "/art/fatdawlf/Lupa")
             .build();
 
-        let config = PikolaunchConfig::load_config();
+        let config = LupaConfig::load_config();
         app.imp().config.set(config).expect("Could not set config");
 
         app
@@ -111,7 +111,7 @@ impl PikolaunchApplication {
         self.add_action_entries([quit_action]);
     }
 
-    pub fn config(&self) -> &PikolaunchConfig {
+    pub fn config(&self) -> &LupaConfig {
         self.imp().config.get().unwrap()
     }
 
@@ -144,7 +144,7 @@ impl PikolaunchApplication {
         );
     }
 
-    fn setup_window_config(&self, win: &PikolaunchWindow) {
+    fn setup_window_config(&self, win: &LupaWindow) {
         let imp = win.imp();
         let scroller = imp.scroller.get();
 

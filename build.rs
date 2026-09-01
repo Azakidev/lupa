@@ -7,7 +7,7 @@
 
 use std::{env, fs, path::Path, process::Command};
 
-static GETTEXT_PACKAGE: &str = "pikolaunch";
+static GETTEXT_PACKAGE: &str = "lupa";
 
 fn main() {
     // Re-run build if translation files change
@@ -16,7 +16,7 @@ fn main() {
     glib_build_tools::compile_resources(
         &["src/ui"],
         "src/ui/resources.gresource.xml",
-        "pikolaunch.gresource",
+        "lupa.gresource",
     );
 
     println!("cargo:rerun-if-changed=po/POTFILES.in");
@@ -45,7 +45,7 @@ fn main() {
         println!("cargo:warning=po/POTFILES not found. Skipping POT generation.");
     }
 
-    // Generate pikolaunch.pot
+    // Generate lupa.pot
     if !files_to_translate.is_empty() {
         let pot_path = po_dir.join(format!("{}.pot", GETTEXT_PACKAGE));
 

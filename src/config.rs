@@ -18,7 +18,7 @@ pub static DEFAULT_CONFIG: &str = include_str!("../data/default.toml");
 // Configuration file definition
 // Each section should implement default themselves
 #[derive(Default, Debug, Deserialize)]
-pub struct PikolaunchConfig {
+pub struct LupaConfig {
     // Aesthetic
     #[serde(rename = "Aesthetic")]
     pub aesthetic: Aesthetic,
@@ -61,13 +61,13 @@ impl Default for Behavior {
     }
 }
 
-impl PikolaunchConfig {
+impl LupaConfig {
     pub fn load_config() -> Self {
         let path = config_path();
 
         match fs::read_to_string(path) {
             Ok(buf) => {
-                let conf: PikolaunchConfig = match toml::from_str(&buf) {
+                let conf: LupaConfig = match toml::from_str(&buf) {
                     Ok(c) => c,
                     Err(e) => {
                         eprintln!("[Error] Failed to parse config file: {}", e);
@@ -129,5 +129,5 @@ fn config_path() -> String {
         },
     };
 
-    format!("{}/pikolaunch/conf.toml", config_path)
+    format!("{}/lupa/conf.toml", config_path)
 }

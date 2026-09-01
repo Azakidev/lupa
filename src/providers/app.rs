@@ -20,20 +20,20 @@ use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
 use icon_finder::find_icon;
 
 use crate::{
-    components::entry::PikolaunchEntry, providers::provider::Provider, window::PikolaunchWindow,
+    components::entry::LupaEntry, providers::provider::Provider, window::LupaWindow,
 };
 
 #[derive(Default)]
 pub struct AppProvider {
     icon_size: OnceCell<u32>,
-    cache: RefCell<HashMap<String, WeakRef<PikolaunchEntry>>>,
+    cache: RefCell<HashMap<String, WeakRef<LupaEntry>>>,
     matcher: SkimMatcherV2,
 }
 
 impl Provider for AppProvider {
     const PREFIX: char = '#';
 
-    fn prepare(&self, win: &PikolaunchWindow) {
+    fn prepare(&self, win: &LupaWindow) {
         let mut cache = self.cache.borrow_mut();
 
         self.icon_size
@@ -46,7 +46,7 @@ impl Provider for AppProvider {
         let apps = discover_apps().unwrap_or_default();
 
         for app in apps {
-            let entry = PikolaunchEntry::new_app(app.clone(), win.icon_size());
+            let entry = LupaEntry::new_app(app.clone(), win.icon_size());
             results.append(&entry);
 
             cache.insert(app.name, entry.downgrade());
@@ -61,7 +61,7 @@ impl Provider for AppProvider {
             .for_each(|entry| entry.set_visible(false));
     }
 
-    fn update_entries(&self, query: &str, win: &PikolaunchWindow) {
+    fn update_entries(&self, query: &str, win: &LupaWindow) {
         let cache = self.cache.borrow();
         let matcher = &self.matcher;
         let results = win.imp().results.get();
@@ -90,7 +90,7 @@ impl Provider for AppProvider {
 
         filtered.sort_unstable_by_key(|(_, s)| *s);
 
-        let mut prev: Option<WeakRef<PikolaunchEntry>> = None;
+        let mut prev: Option<WeakRef<LupaEntry>> = None;
 
         for a in filtered.iter().map(|(a, _)| a.clone()).rev() {
             if let Some(weak) = cache.get(&a)

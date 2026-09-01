@@ -21,20 +21,20 @@ use mime_type::{MimeFormat, MimeType};
 use urlencoding::decode;
 
 use crate::{
-    components::entry::PikolaunchEntry, providers::provider::Provider,
-    utils::spawn_with_new_session, window::PikolaunchWindow,
+    components::entry::LupaEntry, providers::provider::Provider,
+    utils::spawn_with_new_session, window::LupaWindow,
 };
 
 #[derive(Default, Debug)]
 pub struct FileProvider {
     icon_size: OnceCell<u32>,
-    cache: RefCell<HashMap<String, WeakRef<PikolaunchEntry>>>,
+    cache: RefCell<HashMap<String, WeakRef<LupaEntry>>>,
 }
 
 impl Provider for FileProvider {
     const PREFIX: char = '/';
 
-    fn prepare(&self, win: &PikolaunchWindow) {
+    fn prepare(&self, win: &LupaWindow) {
         self.icon_size
             .set(win.icon_size())
             .expect("Failed to set icon size");
@@ -48,7 +48,7 @@ impl Provider for FileProvider {
             .for_each(|entry| entry.set_visible(false));
     }
 
-    fn update_entries(&self, query: &str, win: &PikolaunchWindow) {
+    fn update_entries(&self, query: &str, win: &LupaWindow) {
         let mut cache = self.cache.borrow_mut();
         let results = win.imp().results.get();
 
@@ -105,7 +105,7 @@ impl Provider for FileProvider {
             .iter()
             .filter(|(k, _)| !present.contains(k))
             .map(|(k, v)| (k.clone(), v.clone()))
-            .collect::<Vec<(String, WeakRef<PikolaunchEntry>)>>();
+            .collect::<Vec<(String, WeakRef<LupaEntry>)>>();
 
         non_present.iter().for_each(|(k, weak)| {
             if let Some(entry) = weak.upgrade() {
@@ -117,17 +117,17 @@ impl Provider for FileProvider {
 }
 
 fn generate_file_entry(
-    cache: &mut HashMap<String, WeakRef<PikolaunchEntry>>,
+    cache: &mut HashMap<String, WeakRef<LupaEntry>>,
     file: &Path,
-    win: &PikolaunchWindow,
+    win: &LupaWindow,
     results: &gtk::Box,
     icon_size: Option<u32>,
-) -> PikolaunchEntry {
+) -> LupaEntry {
     // File exists, we checked, so it should have a name
     let filepath = file.to_str().map(|s| s.to_string()).unwrap();
     let icon = build_icon(&file);
 
-    let entry = PikolaunchEntry::new_raw(
+    let entry = LupaEntry::new_raw(
         file.file_name().and_then(|s| s.to_str()).unwrap(),
         file.to_str(),
         Some(icon),

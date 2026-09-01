@@ -19,7 +19,7 @@ mod imp {
 
     #[derive(Default, gtk::CompositeTemplate)]
     #[template(file = "src/ui/entry.blp")]
-    pub struct PikolaunchEntry {
+    pub struct LupaEntry {
         #[template_child]
         pub icon: TemplateChild<gtk::Image>,
         #[template_child]
@@ -33,9 +33,9 @@ mod imp {
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for PikolaunchEntry {
-        const NAME: &'static str = "PikolaunchEntry";
-        type Type = super::PikolaunchEntry;
+    impl ObjectSubclass for LupaEntry {
+        const NAME: &'static str = "LupaEntry";
+        type Type = super::LupaEntry;
         type ParentType = gtk::Button;
 
         fn class_init(klass: &mut Self::Class) {
@@ -47,7 +47,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for PikolaunchEntry {
+    impl ObjectImpl for LupaEntry {
         fn constructed(&self) {
             self.parent_constructed();
 
@@ -55,19 +55,19 @@ mod imp {
         }
     }
 
-    impl WidgetImpl for PikolaunchEntry {}
-    impl ButtonImpl for PikolaunchEntry {}
+    impl WidgetImpl for LupaEntry {}
+    impl ButtonImpl for LupaEntry {}
 }
 
 glib::wrapper! {
-    pub struct PikolaunchEntry(ObjectSubclass<imp::PikolaunchEntry>)
+    pub struct LupaEntry(ObjectSubclass<imp::LupaEntry>)
         @extends gtk::Widget, gtk::Button,
         @implements gtk::Native, gtk::Root, gtk::Accessible, gtk::Actionable, gtk::Buildable, gtk::ConstraintTarget;
 }
 
-impl PikolaunchEntry {
+impl LupaEntry {
     pub fn new_app(app: App, size: u32) -> Self {
-        let obj: PikolaunchEntry = glib::Object::new();
+        let obj: LupaEntry = glib::Object::new();
 
         obj.imp().app.set(app).expect("Failed to set app");
         obj.setup_appearance_app(size);
@@ -83,7 +83,7 @@ impl PikolaunchEntry {
         size: Option<u32>,
         action: F,
     ) -> Self {
-        let obj: PikolaunchEntry = glib::Object::new();
+        let obj: LupaEntry = glib::Object::new();
 
         obj.setup_appearance_raw(title, subtitle, icon_name, size);
         obj.setup_launch_raw(action);

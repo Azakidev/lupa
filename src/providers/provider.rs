@@ -5,14 +5,14 @@
  * SPDX-License-Identifier: MIT
  */
 
-use crate::window::PikolaunchWindow;
+use crate::window::LupaWindow;
 
 pub trait Provider {
     const PREFIX: char;
 
-    fn prepare(&self, win: &PikolaunchWindow);
+    fn prepare(&self, win: &LupaWindow);
 
     fn hide_entries(&self);
 
-    fn update_entries(&self, query: &str, win: &PikolaunchWindow);
+    fn update_entries(&self, query: &str, win: &LupaWindow);
 }

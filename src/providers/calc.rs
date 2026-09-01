@@ -15,7 +15,7 @@ use adw::{
 use evalexpr::*;
 
 use crate::{
-    components::entry::PikolaunchEntry, providers::provider::Provider, window::PikolaunchWindow,
+    components::entry::LupaEntry, providers::provider::Provider, window::LupaWindow,
 };
 
 static OPERANDS: &[&str] = &["+", "-", "*", "/", "^", "%", "<", ">", "=", "&", "|"];
@@ -23,13 +23,13 @@ static OPERANDS: &[&str] = &["+", "-", "*", "/", "^", "%", "<", ">", "=", "&", "
 #[derive(Default, Debug)]
 pub struct CalcProvider {
     icon_size: OnceCell<u32>,
-    cache: RefCell<Option<WeakRef<PikolaunchEntry>>>,
+    cache: RefCell<Option<WeakRef<LupaEntry>>>,
 }
 
 impl Provider for CalcProvider {
     const PREFIX: char = '=';
 
-    fn prepare(&self, win: &PikolaunchWindow) {
+    fn prepare(&self, win: &LupaWindow) {
         self.icon_size
             .set(win.icon_size())
             .expect("Failed to set icon size");
@@ -44,7 +44,7 @@ impl Provider for CalcProvider {
         };
     }
 
-    fn update_entries(&self, query: &str, win: &PikolaunchWindow) {
+    fn update_entries(&self, query: &str, win: &LupaWindow) {
         let query = query.strip_prefix(Self::PREFIX).unwrap_or(query);
 
         if query.len() < 2 {
@@ -72,7 +72,7 @@ impl Provider for CalcProvider {
 }
 
 impl CalcProvider {
-    fn swap_entry(&self, win: &PikolaunchWindow, entry: &PikolaunchEntry) {
+    fn swap_entry(&self, win: &LupaWindow, entry: &LupaEntry) {
         let results = win.imp().results.get();
 
         if let Some(weak) = self.cache.borrow().as_ref()
@@ -91,12 +91,12 @@ fn generate_calc_entry(
     query: &str,
     val: Value,
     icon_size: u32,
-    win: &PikolaunchWindow,
-) -> PikolaunchEntry {
+    win: &LupaWindow,
+) -> LupaEntry {
     let result = val.to_string();
     let clipboard = win.clipboard();
 
-    let entry = PikolaunchEntry::new_raw(
+    let entry = LupaEntry::new_raw(
         &result,
         Some(query),
         Some("accessories-calculator-symbolic"),

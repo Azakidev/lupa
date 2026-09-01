@@ -599,6 +599,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
+name = "lupa"
+version = "0.1.0"
+dependencies = [
+ "evalexpr",
+ "fuzzy-matcher",
+ "gettext-rs",
+ "glib-build-tools",
+ "gtk4",
+ "gtk4-layer-shell",
+ "icon_finder",
+ "libadwaita",
+ "mime-type",
+ "nix",
+ "serde",
+ "toml",
+ "urlencoding",
+ "xdg",
+]
+
+[[package]]
 name = "malloc_buf"
 version = "0.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -691,26 +711,6 @@ dependencies = [
  "gobject-sys",
  "libc",
  "system-deps 9.0.0",
-]
-
-[[package]]
-name = "pikolaunch"
-version = "0.1.0"
-dependencies = [
- "evalexpr",
- "fuzzy-matcher",
- "gettext-rs",
- "glib-build-tools",
- "gtk4",
- "gtk4-layer-shell",
- "icon_finder",
- "libadwaita",
- "mime-type",
- "nix",
- "serde",
- "toml",
- "urlencoding",
- "xdg",
 ]
 
 [[package]]

@@ -12,14 +12,14 @@ mod providers;
 mod utils;
 mod window;
 
-use self::application::PikolaunchApplication;
-use self::window::PikolaunchWindow;
+use self::application::LupaApplication;
+use self::window::LupaWindow;
 
 use gettextrs::{bind_textdomain_codeset, bindtextdomain, textdomain};
 use gtk::prelude::*;
 use gtk::{gio, glib};
 
-static GETTEXT_PACKAGE: &str = "pikolaunch";
+static GETTEXT_PACKAGE: &str = "lupa";
 
 fn main() -> glib::ExitCode {
     // Set up gettext translations
@@ -36,11 +36,11 @@ fn main() -> glib::ExitCode {
     textdomain(GETTEXT_PACKAGE).expect("Unable to switch to the text domain");
 
     // Load resources
-    gio::resources_register_include!("pikolaunch.gresource").expect("Could not load resources");
+    gio::resources_register_include!("lupa.gresource").expect("Could not load resources");
 
     // Create app
     let app =
-        PikolaunchApplication::new("art.fatdawlf.Pikolaunch", &gio::ApplicationFlags::empty());
+        LupaApplication::new("art.fatdawlf.Lupa", &gio::ApplicationFlags::empty());
 
     app.run()
 }

@@ -15,8 +15,8 @@ use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 use std::cell::RefCell;
 
 use crate::{
-    application::PikolaunchApplication,
-    components::entry::PikolaunchEntry,
+    application::LupaApplication,
+    components::entry::LupaEntry,
     providers::{app::AppProvider, calc::CalcProvider, file::FileProvider, provider::Provider},
     utils::first_visible_child,
 };
@@ -26,9 +26,9 @@ mod imp {
     use super::*;
 
     #[derive(Default, gtk::CompositeTemplate, Properties)]
-    #[properties(wrapper_type = super::PikolaunchWindow)]
+    #[properties(wrapper_type = super::LupaWindow)]
     #[template(file = "src/ui/window.blp")]
-    pub struct PikolaunchWindow {
+    pub struct LupaWindow {
         #[template_child]
         pub input: TemplateChild<gtk::Entry>,
         #[template_child]
@@ -48,9 +48,9 @@ mod imp {
     }
 
     #[glib::object_subclass]
-    impl ObjectSubclass for PikolaunchWindow {
-        const NAME: &'static str = "PikolaunchWindow";
-        type Type = super::PikolaunchWindow;
+    impl ObjectSubclass for LupaWindow {
+        const NAME: &'static str = "LupaWindow";
+        type Type = super::LupaWindow;
         type ParentType = adw::ApplicationWindow;
 
         fn class_init(klass: &mut Self::Class) {
@@ -62,7 +62,7 @@ mod imp {
         }
     }
 
-    impl ObjectImpl for PikolaunchWindow {
+    impl ObjectImpl for LupaWindow {
         fn properties() -> &'static [glib::ParamSpec] {
             Self::derived_properties()
         }
@@ -85,19 +85,19 @@ mod imp {
         }
     }
 
-    impl WidgetImpl for PikolaunchWindow {}
-    impl WindowImpl for PikolaunchWindow {}
-    impl ApplicationWindowImpl for PikolaunchWindow {}
-    impl AdwApplicationWindowImpl for PikolaunchWindow {}
+    impl WidgetImpl for LupaWindow {}
+    impl WindowImpl for LupaWindow {}
+    impl ApplicationWindowImpl for LupaWindow {}
+    impl AdwApplicationWindowImpl for LupaWindow {}
 }
 
 glib::wrapper! {
-    pub struct PikolaunchWindow(ObjectSubclass<imp::PikolaunchWindow>)
+    pub struct LupaWindow(ObjectSubclass<imp::LupaWindow>)
         @extends gtk::Widget, gtk::Window, gtk::ApplicationWindow, adw::ApplicationWindow,
         @implements gtk::Native, gtk::Root, gtk::ShortcutManager, gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget, gio::ActionGroup, gio::ActionMap;
 }
 
-impl PikolaunchWindow {
+impl LupaWindow {
     pub fn new<P: IsA<gtk::Application>>(application: &P, icon_size: u32) -> Self {
         glib::Object::builder()
             .property("application", application)
@@ -111,7 +111,7 @@ impl PikolaunchWindow {
 
     fn setup_layer(&self) {
         self.init_layer_shell();
-        self.set_namespace(Some("pikolaunch:launcher"));
+        self.set_namespace(Some("lupa:launcher"));
 
         self.set_layer(Layer::Top);
         self.set_keyboard_mode(KeyboardMode::OnDemand);
@@ -133,7 +133,7 @@ impl PikolaunchWindow {
 
     fn setup_watch_focus(&self) {
         self.connect_is_active_notify(|win| {
-            if let Some(app) = win.application().and_downcast::<PikolaunchApplication>()
+            if let Some(app) = win.application().and_downcast::<LupaApplication>()
                 && !win.is_active()
                 && app.config().beavior.close_when_unfocused
             {
@@ -171,7 +171,7 @@ impl PikolaunchWindow {
             #[weak]
             results,
             move |_| {
-                if let Some(entry) = first_visible_child(&results).and_downcast::<PikolaunchEntry>()
+                if let Some(entry) = first_visible_child(&results).and_downcast::<LupaEntry>()
                 {
                     entry.activate();
                 }

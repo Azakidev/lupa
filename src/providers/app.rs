@@ -276,6 +276,5 @@ pub fn find_icon_path(name: &str, size: u32) -> Option<PathBuf> {
     }
 
     // If all else fails
-    println!("Couldn't find icon for {}", name);
     None
 }

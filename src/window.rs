@@ -193,14 +193,14 @@ impl PikolaunchWindow {
         self.clear_results();
 
         match query {
-            q if q.starts_with(FileProvider::PREFIX) => {
-                imp.file_provider.update_entries(query, self);
+            q if q.starts_with(AppProvider::PREFIX) => {
+                imp.app_provider.update_entries(query, self);
             }
             q if q.starts_with(CalcProvider::PREFIX) => {
                 imp.calc_provider.update_entries(query, self);
             }
-            q if q.starts_with(AppProvider::PREFIX) => {
-                imp.app_provider.update_entries(query, self);
+            q if q.starts_with(FileProvider::PREFIX) => {
+                imp.file_provider.update_entries(query, self);
             }
             // Run all if no prefix is selected
             _ => {

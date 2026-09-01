@@ -17,6 +17,8 @@ use adw::{
     prelude::*,
     subclass::prelude::*,
 };
+use mime_type::{MimeFormat, MimeType};
+use urlencoding::decode;
 
 use crate::{
     components::entry::PikolaunchEntry, providers::provider::Provider,
@@ -52,6 +54,10 @@ impl Provider for FileProvider {
 
         let query = query.strip_prefix(Self::PREFIX).unwrap_or(query);
 
+        if query.is_empty() {
+            return;
+        }
+
         let Ok(output) = Command::new("localsearch")
             .arg("search")
             .arg(query)
@@ -67,16 +73,27 @@ impl Provider for FileProvider {
         let present = string
             .trim()
             .lines()
-            .map(|l| l.replace("file://", ""))
+            .filter_map(|l| {
+                let Ok(res) = decode(l) else {
+                    println!("Couldn't decode {}", l);
+                    return None;
+                };
+                Some(res.replace("file://", ""))
+            })
             .collect::<Vec<String>>();
 
-        present.iter().rev().for_each(|f| {
+        present.iter().rev().take(25).for_each(|f| {
             let path = Path::new(f);
 
-            if path.exists() && !cache.contains_key(f) {
+            if path.exists()
+                && let Some(weak) = cache.get(f)
+                && let Some(entry) = weak.upgrade()
+            {
+                entry.set_visible(true);
+            } else {
                 generate_file_entry(
-                    path,
                     &mut cache,
+                    path,
                     win,
                     &results,
                     self.icon_size.get().and_then(|s| Some(*s)),
@@ -100,20 +117,20 @@ impl Provider for FileProvider {
 }
 
 fn generate_file_entry(
-    file: &Path,
     cache: &mut HashMap<String, WeakRef<PikolaunchEntry>>,
+    file: &Path,
     win: &PikolaunchWindow,
     results: &gtk::Box,
     icon_size: Option<u32>,
-) {
+) -> PikolaunchEntry {
     // File exists, we checked, so it should have a name
     let filepath = file.to_str().map(|s| s.to_string()).unwrap();
+    let icon = build_icon(&file);
 
     let entry = PikolaunchEntry::new_raw(
         file.file_name().and_then(|s| s.to_str()).unwrap(),
         file.to_str(),
-        // TODO: Custom icon per file (and maybe thumbnails for images)
-        Some("folder-documents-symbolic"),
+        Some(icon),
         icon_size,
         glib::clone!(
             #[weak]
@@ -121,7 +138,6 @@ fn generate_file_entry(
             #[strong]
             filepath,
             move || {
-                // TODO: Open file
                 let mut command = Command::new("xdg-open");
                 command.arg(&filepath);
 
@@ -136,6 +152,37 @@ fn generate_file_entry(
 
     entry.set_visible(true);
     results.append(&entry);
-
     cache.insert(filepath, entry.downgrade());
+
+    entry
+}
+
+fn build_icon(path: &Path) -> &str {
+    let default = "folder-documents-symbolic";
+
+    if path.is_dir() {
+        return "document-open-symbolic";
+    }
+
+    let Some(ext) = path.extension().and_then(|s| s.to_str()) else {
+        return default;
+    };
+
+    if ext.contains("md") {
+        return "x-office-document-symbolic";
+    }
+
+    let Some(mime) = MimeType::from_ext(ext) else {
+        return default;
+    };
+
+    match mime.to_string() {
+        f if f.contains("image") => "image-x-generic-symbolic",
+        f if f.contains("audio") => "folder-music-symbolic",
+        f if f.contains("video") => "folder-videos-symbolic",
+        f if f.contains("text") | f.contains("document") | f.contains("pdf") => {
+            "x-office-document-symbolic"
+        }
+        _ => default,
+    }
 }

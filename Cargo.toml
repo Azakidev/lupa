@@ -21,6 +21,8 @@ xdg = "3.0.0"
 nix = { version = "0.31", features = ["process", "socket"] }
 icon_finder = "1.0"
 evalexpr = "13.1"
+mime-type = "0.2"
+urlencoding = "2.1"
 
 [build-dependencies]
 glib-build-tools = "0.22"

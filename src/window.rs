@@ -15,10 +15,7 @@ use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 use std::cell::RefCell;
 
 use crate::{
-    application::LupaApplication,
-    components::entry::LupaEntry,
-    providers::{app::AppProvider, calc::CalcProvider, file::FileProvider, provider::Provider},
-    utils::first_visible_child,
+    application::LupaApplication, components::entry::LupaEntry, config::LupaConfig, providers::{app::AppProvider, calc::CalcProvider, file::FileProvider, provider::Provider}, utils::first_visible_child
 };
 
 mod imp {
@@ -40,6 +37,8 @@ mod imp {
 
         #[property(get, set)]
         pub icon_size: RefCell<u32>,
+        #[property(get, set)]
+        pub max_file_entries: RefCell<u32>,
 
         // Providers
         pub app_provider: AppProvider,
@@ -98,10 +97,14 @@ glib::wrapper! {
 }
 
 impl LupaWindow {
-    pub fn new<P: IsA<gtk::Application>>(application: &P, icon_size: u32) -> Self {
+    pub fn new<P: IsA<gtk::Application>>(application: &P, config: &LupaConfig) -> Self {
+        let icon_size = config.aesthetic.entry_size - 4;
+        let max_file_entries = config.beavior.max_file_entries;
+
         glib::Object::builder()
             .property("application", application)
             .property("icon_size", icon_size)
+            .property("max_file_entries", max_file_entries)
             .build()
     }
 

@@ -51,12 +51,14 @@ impl Default for Aesthetic {
 #[serde(default)]
 pub struct Behavior {
     pub close_when_unfocused: bool,
+    pub max_file_entries: u32
 }
 
 impl Default for Behavior {
     fn default() -> Self {
         Self {
             close_when_unfocused: true,
+            max_file_entries: 25
         }
     }
 }

@@ -7,10 +7,16 @@ A minimalist launcher built with gtk4-layer-shell and rust.
 > You may want to try [wl-clip-persist](https://github.com/Linus789/wl-clip-persist)
 > if this is the case.
 
+## Core Features
+- Search and launch apps
+- Search and open files
+- Evaluate mathematical expressions, making use of the [evalexpr crate](https://https://crates.io/crates/evalexpr)
+
+## Credit
+Some implementation details are heavily based in
+[lucien](https://github.com/Wachamuli/lucien).
+
 ## TO-DO
-- [x] --default-config launch flag to print a default config to stdout
-- [ ] Providers
-    - [x] Calculator
-        - [ ] A better icon for entry
-    - [x] Files (localsearch)
-        - [x] Icon detection and/or thumbnails
+- [ ] A better calculator icon
+- [ ] Stateful search icon, morphs depending on prefix
+- [ ] Side panel

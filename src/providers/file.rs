@@ -17,18 +17,21 @@ use adw::{
     prelude::*,
     subclass::prelude::*,
 };
+use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
 use mime_type::{MimeFormat, MimeType};
 use urlencoding::decode;
 
 use crate::{
-    components::entry::LupaEntry, providers::provider::Provider,
-    utils::spawn_with_new_session, window::LupaWindow,
+    components::entry::LupaEntry, providers::provider::Provider, utils::spawn_with_new_session,
+    window::LupaWindow,
 };
 
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub struct FileProvider {
     icon_size: OnceCell<u32>,
+    max_entries: OnceCell<u32>,
     cache: RefCell<HashMap<String, WeakRef<LupaEntry>>>,
+    matcher: SkimMatcherV2,
 }
 
 impl Provider for FileProvider {
@@ -38,6 +41,9 @@ impl Provider for FileProvider {
         self.icon_size
             .set(win.icon_size())
             .expect("Failed to set icon size");
+        self.max_entries
+            .set(win.max_file_entries())
+            .expect("Failed to set file entry limit");
     }
 
     fn hide_entries(&self) {
@@ -50,19 +56,32 @@ impl Provider for FileProvider {
 
     fn update_entries(&self, query: &str, win: &LupaWindow) {
         let mut cache = self.cache.borrow_mut();
+        let max_entries = *self.max_entries.get().unwrap() as usize;
+        let matcher = &self.matcher;
         let results = win.imp().results.get();
 
+        // /query/path/with/folder/
         let query = query.strip_prefix(Self::PREFIX).unwrap_or(query);
 
         if query.is_empty() {
             return;
         }
 
-        let Ok(output) = Command::new("localsearch")
-            .arg("search")
-            .arg(query)
-            .output()
-        else {
+        let folder_only = query.ends_with(Self::PREFIX);
+
+        // query/path/with/folder/
+        let query = query.strip_suffix(Self::PREFIX).unwrap_or(query);
+        // query/path/with/folder
+
+        let mut command = Command::new("localsearch");
+
+        command.arg("search").arg(query);
+
+        if folder_only {
+            command.arg("--folders");
+        }
+
+        let Ok(output) = command.output() else {
             return;
         };
 
@@ -70,40 +89,65 @@ impl Provider for FileProvider {
             return;
         };
 
-        let present = string
+        let mut present = string
             .trim()
             .lines()
             .filter_map(|l| {
                 let Ok(res) = decode(l) else {
-                    println!("Couldn't decode {}", l);
+                    eprintln!("[Warn] Couldn't decode {}", l);
                     return None;
                 };
                 Some(res.replace("file://", ""))
             })
-            .collect::<Vec<String>>();
+            .filter_map(|f| {
+                let path = Path::new(&f);
+                if let Some(name) = path.file_name().and_then(|s| s.to_str())
+                    && let Some(score) =
+                        matcher.fuzzy_match(&name.to_lowercase(), &query.to_lowercase())
+                    && score.is_positive()
+                {
+                    Some((f, score))
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<(String, i64)>>();
 
-        present.iter().rev().take(25).for_each(|f| {
-            let path = Path::new(f);
+        present.sort_by_cached_key(|(_, s)| *s);
 
-            if path.exists()
-                && let Some(weak) = cache.get(f)
-                && let Some(entry) = weak.upgrade()
-            {
-                entry.set_visible(true);
-            } else {
-                generate_file_entry(
-                    &mut cache,
-                    path,
-                    win,
-                    &results,
-                    self.icon_size.get().and_then(|s| Some(*s)),
-                );
-            }
-        });
+        present
+            .iter()
+            .rev()
+            .map(|(f, _)| f)
+            .take(max_entries)
+            .for_each(|f| {
+                let path = Path::new(f);
+
+                if path.exists()
+                    && let Some(weak) = cache.get(f)
+                    && let Some(entry) = weak.upgrade()
+                {
+                    entry.set_visible(true);
+                } else {
+                    generate_file_entry(
+                        &mut cache,
+                        path,
+                        win,
+                        &results,
+                        self.icon_size.get().and_then(|s| Some(*s)),
+                    );
+                }
+            });
 
         let non_present = cache
             .iter()
-            .filter(|(k, _)| !present.contains(k))
+            .filter(|(k, _)| {
+                !present
+                    .iter()
+                    .map(|(s, _)| s)
+                    .collect::<Vec<&String>>()
+                    .contains(k)
+            })
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect::<Vec<(String, WeakRef<LupaEntry>)>>();
 

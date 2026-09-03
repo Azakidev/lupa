@@ -51,14 +51,13 @@ mod imp {
     impl ApplicationImpl for LupaApplication {
         fn activate(&self) {
             let application = self.obj();
-            // Get the current window or create one if necessary
             application.load_config_styles();
 
             let config = application.imp().config.get().unwrap();
-            let icon_size = config.aesthetic.entry_size - 4;
 
+            // Get the current window or create one if necessary
             let window = application.active_window().unwrap_or_else(|| {
-                let window = LupaWindow::new(&*application, icon_size);
+                let window = LupaWindow::new(&*application, &config);
                 application.setup_window_config(&window);
                 window.upcast()
             });

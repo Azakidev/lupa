@@ -9,6 +9,13 @@ template $LupaWindow: Adw.ApplicationWindow {
         "launcher",
     ]
 
+    content: Adw.OverlaySplitView {
+        sidebar-position: start;
+        collapsed: false;
+        show-sidebar: false;
+
+    sidebar: Adw.NavigationPage sidebar {};
+
     Box {
         margin-top: 8;
         orientation: vertical;
@@ -73,4 +80,5 @@ template $LupaWindow: Adw.ApplicationWindow {
             }
         }
     }
+        };
 }

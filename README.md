@@ -17,6 +17,7 @@ Some implementation details are heavily based in
 [lucien](https://github.com/Wachamuli/lucien).
 
 ## TO-DO
+- [ ] Contain app entry logic to app provider
 - [ ] A better calculator icon
 - [ ] Stateful search icon, morphs depending on prefix
 - [ ] Side panel

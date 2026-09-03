@@ -34,6 +34,8 @@ mod imp {
         pub scroller: TemplateChild<gtk::ScrolledWindow>,
         #[template_child]
         pub results: TemplateChild<gtk::Box>,
+        #[template_child]
+        pub sidebar: TemplateChild<adw::NavigationPage>,
 
         #[property(get, set)]
         pub icon_size: RefCell<u32>,

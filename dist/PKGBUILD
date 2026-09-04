@@ -10,37 +10,41 @@ license=('MIT')
 conflicts=('lupa')
 provides=("lupa=${pkgver}")
 
-makedepends=('git' 'cargo' 'gettext' 'blueprint-compiler' 'pkgconf')
+makedepends=('git' 'cargo' 'rust' 'gettext' 'blueprint-compiler' 'pkgconf')
+options=(!debug !lto)
 
 depends=(
 	'gtk4' 'gtk4-layer-shell' 'libadwaita'
 	'xdg-utils' 'localsearch'
 )
 
-source=("$pkgname-$pkgver.tar.gz::git+$url")
+source=("$pkgname::git+$url")
 sha256sums=('SKIP')
 
 pkgver() {
   cd "$pkgname"
-  git describe --long --abbrev=7 | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
 }
 
 prepare() {
-	cd "$pkgname-$pkgver"
+	cd "$pkgname"
+	export RUSTFLAGS="--remap-path-prefix=$srcdir=/"
 	export CARGO_HOME="$SRCDEST/cargo-home"
-	cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+	cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
-	cd "$pkgname-$pkgver"
+	cd "$pkgname"
 	export CARGO_HOME="$SRCDEST/cargo-home"
-	cargo build --frozen --release --all-targets
+	cargo build --frozen --release
 }
 
 package() {
-	cd "$pkgname-$pkgver"
+	cd "$pkgname"
 
-	install -Dm755 "target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
+	local binname="${pkgname//-git/}"
+
+	install -Dm755 "target/release/$binname" "$pkgdir/usr/bin/$binname"
 
 	local out_dir
 	out_dir=$(find target/release/build/ -maxdepth 2 -type d -name "out" -exec test -d "{}/locale" \; -print -quit)
@@ -50,7 +54,7 @@ package() {
 			if [ -f "$mo" ]; then
 				local lang
 				lang=$(echo "$mo" | awk -F'/locale/' '{print $2}' | cut -d'/' -f1)
-				install -Dm644 "$mo" "$pkgdir/usr/share/locale/$lang/LC_MESSAGES/${pkgname}.mo"
+				install -Dm644 "$mo" "$pkgdir/usr/share/locale/$lang/LC_MESSAGES/${binname}.mo"
 			fi
 		done
 	fi

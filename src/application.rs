@@ -125,8 +125,12 @@ impl LupaApplication {
         let entry_size = config.aesthetic.entry_size;
 
         provider.load_from_string(&format!(
-            ".launcher {{
-                background-color: rgb(from var(--window-bg-color) r g b / {opacity});
+            "
+            :root {{
+                --window-bg: rgb(from var(--window-bg-color) r g b / {opacity});
+            }}
+
+            .launcher {{
                 border-radius: {radius}px;
             }}
 

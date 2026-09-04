@@ -1,6 +1,10 @@
-
 .launcher {
-    border-radius: 12px;
+    background-color: var(--window-bg);
+}
+
+.sidebar-pane {
+    --sidebar-border-color: var(--border-color);
+    background-color: var(--window-bg) !important;
 }
 
 .searcher {

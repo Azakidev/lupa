@@ -18,11 +18,14 @@ use adw::{
     subclass::prelude::*,
 };
 use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
+use gettextrs::gettext;
 use mime_type::{MimeFormat, MimeType};
 use urlencoding::decode;
 
 use crate::{
-    components::entry::LupaEntry, providers::provider::Provider, utils::spawn_with_new_session,
+    components::{entry::LupaEntry, sidebar::LupaSidebarContent},
+    providers::provider::{Provider, SidebarProvider},
+    utils::spawn_with_new_session,
     window::LupaWindow,
 };
 
@@ -129,7 +132,7 @@ impl Provider for FileProvider {
                 {
                     entry.set_visible(true);
                 } else {
-                    generate_file_entry(
+                    self.generate_file_entry(
                         &mut cache,
                         path,
                         win,
@@ -160,45 +163,120 @@ impl Provider for FileProvider {
     }
 }
 
-fn generate_file_entry(
-    cache: &mut HashMap<String, WeakRef<LupaEntry>>,
-    file: &Path,
-    win: &LupaWindow,
-    results: &gtk::Box,
-    icon_size: Option<u32>,
-) -> LupaEntry {
-    // File exists, we checked, so it should have a name
-    let filepath = file.to_str().map(|s| s.to_string()).unwrap();
-    let icon = build_icon(&file);
+impl SidebarProvider for FileProvider {
+    fn populate_sidebar(&self, entry: &LupaEntry, win: &LupaWindow) -> LupaSidebarContent {
+        let imp = entry.imp();
+        let file = imp.name.text().to_string();
+        let path = imp.comment.text().to_string();
+        let icon = imp.icon.icon_name().unwrap();
+        let size = *self.icon_size.get().unwrap();
 
-    let entry = LupaEntry::new_raw(
-        file.file_name().and_then(|s| s.to_str()).unwrap(),
-        file.to_str(),
-        Some(icon),
-        icon_size,
-        glib::clone!(
-            #[weak]
-            win,
-            #[strong]
-            filepath,
-            move || {
-                let mut command = Command::new("xdg-open");
-                command.arg(&filepath);
+        let sidebar = LupaSidebarContent::new(&file, Some(&path), Some(&icon), size, false);
 
-                if let Err(e) = spawn_with_new_session(&mut command) {
-                    eprint!("[Error] Failed to open file: {}", e);
+        // Open in browser
+        sidebar.add_action(
+            &gettext("Open in file browser"),
+            Some("external-link-symbolic"),
+            glib::clone!(
+                #[weak]
+                win,
+                #[strong(rename_to=filepath)]
+                path,
+                move |_| {
+                    let path = Path::new(&filepath);
+
+                    let mut command = Command::new("xdg-open");
+
+                    if path.is_dir() {
+                        command.arg(&filepath);
+                    } else {
+                        command.arg(&path.parent().unwrap_or(&path));
+                    }
+
+                    if let Err(e) = spawn_with_new_session(&mut command) {
+                        eprint!("[Error] Failed to open file: {}", e);
+                    }
+
+                    win.close();
                 }
+            ),
+        );
 
-                win.close();
-            }
-        ),
-    );
+        sidebar.add_action(
+            &gettext("Copy path"),
+            Some("clipboard-symbolic"),
+            glib::clone!(
+                #[weak]
+                win,
+                #[strong]
+                path,
+                move |b| {
+                    b.clipboard().set_text(&path);
+                    win.close();
+                }
+            ),
+        );
 
-    entry.set_visible(true);
-    results.append(&entry);
-    cache.insert(filepath, entry.downgrade());
+        sidebar
+    }
+}
 
-    entry
+impl FileProvider {
+    fn generate_file_entry(
+        &self,
+        cache: &mut HashMap<String, WeakRef<LupaEntry>>,
+        file: &Path,
+        win: &LupaWindow,
+        results: &gtk::Box,
+        icon_size: Option<u32>,
+    ) -> LupaEntry {
+        // File exists, we checked, so it should have a name
+        let filepath = file.to_str().map(|s| s.to_string()).unwrap();
+        let icon = build_icon(&file);
+
+        let prov = Self::default();
+        prov.icon_size
+            .set(
+                self.icon_size
+                    .get()
+                    .and_then(|n| Some(*n))
+                    .unwrap_or_default(),
+            )
+            .expect("Failed to copy icon size");
+
+        let entry = LupaEntry::new(
+            file.file_name().and_then(|s| s.to_str()).unwrap(),
+            file.to_str(),
+            Some(icon),
+            false,
+            false,
+            icon_size,
+            Some(Box::new(prov)),
+            win,
+            glib::clone!(
+                #[weak]
+                win,
+                #[strong]
+                filepath,
+                move |_| {
+                    let mut command = Command::new("xdg-open");
+                    command.arg(&filepath);
+
+                    if let Err(e) = spawn_with_new_session(&mut command) {
+                        eprint!("[Error] Failed to open file: {}", e);
+                    }
+
+                    win.close();
+                }
+            ),
+        );
+
+        entry.set_visible(true);
+        results.append(&entry);
+        cache.insert(filepath, entry.downgrade());
+
+        entry
+    }
 }
 
 fn build_icon(path: &Path) -> &str {

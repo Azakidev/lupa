@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-  <gresource prefix="/art/fatdawlf/Lupa/">
-    <file compressed="true">style.css</file>
-  </gresource>
+    <gresource prefix="/art/fatdawlf/Lupa/">
+        <file compressed="true" preprocess="xml-stripblanks">icons/external-link-symbolic.svg</file>
+        <file compressed="true" preprocess="xml-stripblanks">icons/clipboard-symbolic.svg</file>
+        <file compressed="true">style.css</file>
+    </gresource>
 </gresources>
 

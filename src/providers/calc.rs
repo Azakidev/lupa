@@ -14,9 +14,7 @@ use adw::{
 };
 use evalexpr::*;
 
-use crate::{
-    components::entry::LupaEntry, providers::provider::Provider, window::LupaWindow,
-};
+use crate::{components::entry::LupaEntry, providers::provider::Provider, window::LupaWindow};
 
 static OPERANDS: &[&str] = &["+", "-", "*", "/", "^", "%", "<", ">", "=", "&", "|"];
 
@@ -87,27 +85,25 @@ impl CalcProvider {
     }
 }
 
-fn generate_calc_entry(
-    query: &str,
-    val: Value,
-    icon_size: u32,
-    win: &LupaWindow,
-) -> LupaEntry {
+fn generate_calc_entry(query: &str, val: Value, icon_size: u32, win: &LupaWindow) -> LupaEntry {
     let result = val.to_string();
-    let clipboard = win.clipboard();
 
-    let entry = LupaEntry::new_raw(
+    let entry = LupaEntry::new(
         &result,
         Some(query),
         Some("accessories-calculator-symbolic"),
+        false,
+        false,
         Some(icon_size),
+        None,
+        win,
         glib::clone!(
             #[weak]
             win,
             #[strong]
             result,
-            move || {
-                clipboard.set_text(&result);
+            move |_| {
+                win.clipboard().set_text(&result);
                 win.close();
             }
         ),

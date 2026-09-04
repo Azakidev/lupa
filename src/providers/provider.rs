@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-use crate::{components::entry::LupaEntry, window::LupaWindow};
+use crate::{components::{entry::LupaEntry, sidebar::LupaSidebarContent}, window::LupaWindow};
 
 pub trait Provider {
     const PREFIX: char;
@@ -18,5 +18,5 @@ pub trait Provider {
 }
 
 pub trait SidebarProvider {
-    fn populate_sidebar(&self, entry: &LupaEntry) -> gtk::Box;
+    fn populate_sidebar(&self, entry: &LupaEntry, win: &LupaWindow) -> LupaSidebarContent;
 }

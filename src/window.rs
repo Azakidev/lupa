@@ -35,8 +35,11 @@ mod imp {
         #[template_child]
         pub results: TemplateChild<gtk::Box>,
         #[template_child]
-        pub sidebar: TemplateChild<adw::NavigationPage>,
+        pub sidebar_view: TemplateChild<adw::OverlaySplitView>,
+        #[template_child]
+        pub sidebar_content: TemplateChild<adw::Bin>,
 
+        // Configuration entries
         #[property(get, set)]
         pub icon_size: RefCell<u32>,
         #[property(get, set)]
@@ -158,17 +161,21 @@ impl LupaWindow {
             self,
             #[weak]
             revealer,
+            #[weak]
+            results,
             move |i| {
                 let text = i.text().trim().to_string();
 
-                if text.is_empty() {
+                obj.imp().sidebar_view.set_show_sidebar(false);
+
+                obj.update_results(&text);
+
+                if text.is_empty() || first_visible_child(&results).is_none() {
                     obj.shrink();
                     revealer.set_reveal_child(false);
                 } else {
                     revealer.set_reveal_child(true);
                 }
-
-                obj.update_results(&text);
             }
         ));
 

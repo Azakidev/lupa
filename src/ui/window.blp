@@ -9,76 +9,94 @@ template $LupaWindow: Adw.ApplicationWindow {
         "launcher",
     ]
 
-    content: Adw.OverlaySplitView {
-        sidebar-position: start;
+    content: Adw.OverlaySplitView sidebar_view {
+        sidebar-position: end;
         collapsed: false;
         show-sidebar: false;
+        sidebar-width-fraction: 0.5;
 
-    sidebar: Adw.NavigationPage sidebar {};
+        sidebar: Adw.NavigationPage {
+            title: _("Detail page");
 
-    Box {
-        margin-top: 8;
-        orientation: vertical;
+            styles [
+                "launcher_sidebar",
+            ]
+
+            ScrolledWindow {
+                hscrollbar-policy: never;
+
+                child: Adw.Bin sidebar_content {
+                    margin-top: 12;
+                    margin-bottom: 12;
+                    margin-start: 12;
+                    margin-end: 12;
+                };
+            }
+        };
 
         Box {
-            orientation: horizontal;
-            spacing: 4;
-            margin-start: 16;
-            margin-bottom: 8;
-
-            Image {
-                icon-name: "search";
-                pixel-size: 24;
-
-                styles [
-                    "dimmed",
-                ]
-
-                accessibility {
-                    label: _("Search");
-                }
-            }
-
-            Entry input {
-                margin-start: 8;
-                margin-end: 8;
-                hexpand: true;
-                vexpand: true;
-                valign: center;
-
-                styles [
-                    "flat",
-                    "searcher",
-                ]
-
-                text: _("");
-                placeholder-text: _("Search anything…");
-            }
-        }
-
-        Revealer result_revealer {
-            reveal-child: false;
+            margin-top: 8;
+            orientation: vertical;
 
             Box {
-                orientation: vertical;
+                orientation: horizontal;
+                spacing: 4;
+                margin-start: 16;
+                margin-bottom: 8;
 
-                Separator {
-                    orientation: horizontal;
-                    hexpand: true;
+                Image {
+                    icon-name: "search";
+                    pixel-size: 24;
+
+                    styles [
+                        "dimmed",
+                    ]
+
+                    accessibility {
+                        label: _("Search");
+                    }
                 }
 
-                ScrolledWindow scroller {
-                    hscrollbar-policy: never;
+                Entry input {
+                    margin-start: 8;
+                    margin-end: 8;
+                    hexpand: true;
+                    vexpand: true;
+                    valign: center;
 
-                    Box results {
-                        orientation: vertical;
-                        margin-top: 4;
-                        margin-bottom: 8;
-                        spacing: 2;
+                    styles [
+                        "flat",
+                        "searcher",
+                    ]
+
+                    text: _("");
+                    placeholder-text: _("Search anything…");
+                }
+            }
+
+            Revealer result_revealer {
+                reveal-child: false;
+
+                Box {
+                    orientation: vertical;
+
+                    Separator {
+                        orientation: horizontal;
+                        hexpand: true;
+                    }
+
+                    ScrolledWindow scroller {
+                        hscrollbar-policy: never;
+
+                        Box results {
+                            orientation: vertical;
+                            margin-top: 4;
+                            margin-bottom: 8;
+                            spacing: 2;
+                        }
                     }
                 }
             }
         }
-    }
-        };
+    };
 }

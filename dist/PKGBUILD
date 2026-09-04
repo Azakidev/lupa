@@ -1,0 +1,57 @@
+# Maintainer: FatDawlf <zazaguichi@outlook.com>
+pkgname=lupa-git
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="A minimalist launcher built on gtk4-layer-shell."
+arch=('x86_64' 'aarch64')
+url="https://github.com/Azakidev/lupa"
+license=('MIT')
+
+conflicts=('lupa')
+provides=("lupa=${pkgver}")
+
+makedepends=('git' 'cargo' 'gettext' 'blueprint-compiler' 'pkgconf')
+
+depends=(
+	'gtk4' 'gtk4-layer-shell' 'libadwaita'
+	'xdg-utils' 'localsearch'
+)
+
+source=("$pkgname-$pkgver.tar.gz::git+$url")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$pkgname"
+  git describe --long --abbrev=7 | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+	cd "$pkgname-$pkgver"
+	export CARGO_HOME="$SRCDEST/cargo-home"
+	cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+	cd "$pkgname-$pkgver"
+	export CARGO_HOME="$SRCDEST/cargo-home"
+	cargo build --frozen --release --all-targets
+}
+
+package() {
+	cd "$pkgname-$pkgver"
+
+	install -Dm755 "target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
+
+	local out_dir
+	out_dir=$(find target/release/build/ -maxdepth 2 -type d -name "out" -exec test -d "{}/locale" \; -print -quit)
+
+	if [ -d "$out_dir/locale" ]; then
+		for mo in "$out_dir"/locale/*/LC_MESSAGES/*.mo; do
+			if [ -f "$mo" ]; then
+				local lang
+				lang=$(echo "$mo" | awk -F'/locale/' '{print $2}' | cut -d'/' -f1)
+				install -Dm644 "$mo" "$pkgdir/usr/share/locale/$lang/LC_MESSAGES/${pkgname}.mo"
+			fi
+		done
+	fi
+}

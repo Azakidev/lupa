@@ -1,6 +1,14 @@
 [package]
 name = "lupa"
+description = "A minimalist launcher"
 version = "0.1.0"
+authors = ["FatDawlf <zazaguichi@outlook.com>"]
+license = "MIT"
+categories = ["command-line-utilities"]
+
+keywords = ["launcher", "spotlight", "gtk4", "layer-shell"]
+
+readme = "README.md"
 edition = "2024"
 
 [dependencies]

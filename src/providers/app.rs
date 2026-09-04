@@ -111,10 +111,7 @@ impl AppProvider {
     fn make_entry(&self, app: App, win: &LupaWindow) -> LupaEntry {
         let icon_name = app.icon.as_ref().map_or("", |s| s.as_str());
 
-        let icon = find_icon_path(
-            icon_name,
-            self.icon_size.get().copied().unwrap(),
-        );
+        let icon = find_icon_path(icon_name, self.icon_size.get().copied().unwrap());
 
         let icon = if let Some(icon_path) = icon {
             icon_path.to_string_lossy().to_string()
@@ -132,9 +129,11 @@ impl AppProvider {
             None,
             win,
             glib::clone!(
+                #[weak]
+                win,
                 #[strong]
                 app,
-                move |btn| {
+                move |_| {
                     let raw_command: Vec<_> = app
                         .exec
                         .split_whitespace()
@@ -153,7 +152,7 @@ impl AppProvider {
                         return;
                     }
 
-                    let _ = btn.activate_action("app.quit", None);
+                    win.close();
                 }
             ),
         );
@@ -313,7 +312,7 @@ pub fn find_icon_path(name: &str, size: u32) -> Option<PathBuf> {
         return Some(path.to_path_buf());
     }
 
-    // Android Studio seems to be broken on some themes, prefer the default pixmap icon
+    // Android Studio seems to be broken on some themes, prefer the default icon
     if let Some(path) = find_icon(name, size)
         && name != "android-studio"
     {

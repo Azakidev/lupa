@@ -3,6 +3,7 @@
     <gresource prefix="/art/fatdawlf/Lupa/">
         <file compressed="true" preprocess="xml-stripblanks">icons/external-link-symbolic.svg</file>
         <file compressed="true" preprocess="xml-stripblanks">icons/clipboard-symbolic.svg</file>
+        <file compressed="true" preprocess="xml-stripblanks">icons/equals-symbolic.svg</file>
         <file compressed="true">style.css</file>
     </gresource>
 </gresources>

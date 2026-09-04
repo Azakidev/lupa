@@ -91,7 +91,7 @@ fn generate_calc_entry(query: &str, val: Value, icon_size: u32, win: &LupaWindow
     let entry = LupaEntry::new(
         &result,
         Some(query),
-        Some("accessories-calculator-symbolic"),
+        Some("equals-symbolic"),
         false,
         false,
         Some(icon_size),
@@ -109,6 +109,7 @@ fn generate_calc_entry(query: &str, val: Value, icon_size: u32, win: &LupaWindow
         ),
     );
 
+    entry.imp().icon.add_css_class("dimmed");
     entry.set_visible(true);
 
     entry

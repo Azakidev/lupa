@@ -7,6 +7,9 @@ A minimalist launcher built with gtk4-layer-shell and rust.
 > You may want to try [wl-clip-persist](https://github.com/Linus789/wl-clip-persist)
 > if this is the case.
 
+## Usage
+TODO
+
 ## Core Features
 - Search and launch apps
 - Search and open files
@@ -17,7 +20,13 @@ Some implementation details are heavily based in
 [lucien](https://github.com/Wachamuli/lucien).
 
 ## TO-DO
-- [ ] Contain app entry logic to app provider
-- [ ] A better calculator icon
+- [x] Contain app entry logic to app provider
+- [x] A better calculator icon
 - [ ] Stateful search icon, morphs depending on prefix
 - [ ] Side panel
+    - [x] General implementation
+    - [x] Files side panel
+    - [ ] Apps side panel
+        - [ ] Get entries from desktop file
+        - [ ] Generate side panel
+- [ ] Usage documentation

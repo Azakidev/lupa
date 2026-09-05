@@ -149,6 +149,10 @@ impl LupaEntry {
                 if key == gtk::gdk::Key::Right {
                     sidebar.set_child(Some(&content));
                     view.set_show_sidebar(true);
+
+                    if let Some(child) = (&content.imp().actions_box).first_child() {
+                        child.grab_focus();
+                    }
                 } else {
                     sidebar.set_child(None::<&gtk::Widget>);
                     view.set_show_sidebar(false);

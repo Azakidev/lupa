@@ -89,6 +89,7 @@ mod imp {
             obj.setup_providers();
             obj.setup_layer();
             obj.setup_watch_focus();
+            obj.setup_hide_sidebar();
             obj.setup_input();
         }
     }
@@ -152,6 +153,22 @@ impl LupaWindow {
                 win.close();
             }
         });
+    }
+
+    fn setup_hide_sidebar(&self) {
+        let controller = gtk::EventControllerKey::new();
+
+        controller.connect_key_released(glib::clone!(
+            #[weak(rename_to=view)]
+            &self.imp().sidebar_view,
+            move |_, key, _, _| {
+                if key == gtk::gdk::Key::Left {
+                    view.set_show_sidebar(false);
+                }
+            }
+        ));
+
+        self.add_controller(controller);
     }
 
     fn setup_input(&self) {

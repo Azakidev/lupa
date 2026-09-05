@@ -1,61 +1,61 @@
 using Gtk 4.0;
 
 template $LupaSidebarContent: Box {
-    orientation: vertical;
-    spacing: 8;
+	orientation: vertical;
+	spacing: 8;
 
-    Image icon {
-        margin-top: 12;
-        margin-bottom: 8;
-        icon-size: large;
+	Image icon {
+		margin-top: 12;
+		margin-bottom: 8;
+		icon-size: large;
 
-        accessibility {
-          label: _("Icon");
-        }
-    }
+		accessibility {
+			label: _("Icon");
+		}
+	}
 
-    Box labels {
-        orientation: vertical;
-        spacing: 2;
+	Box labels {
+		orientation: vertical;
+		spacing: 2;
+		margin-end: 16;
+		hexpand: true;
 
-        margin-end: 16;
-        hexpand: true;
+		Label title {
+			halign: center;
+			lines: 1;
+			ellipsize: end;
 
-        Label title {
-            halign: center;
-            lines: 1;
-            ellipsize: end;
+			styles [
+				"heading",
+			]
+		}
 
-            styles [
-                "heading",
-            ]
-        }
+		Label subtitle {
+			halign: center;
+			lines: 2;
+			wrap: true;
+			justify: center;
+			ellipsize: start;
 
-        Label subtitle {
-            halign: center;
-            lines: 2;
-            ellipsize: start;
+			styles [
+				"dimmed",
+			]
+		}
+	}
 
-            styles [
-                "dimmed",
-            ]
-        }
-    }
+	Label actions_label {
+		halign: start;
+		lines: 1;
+		ellipsize: end;
+		label: _("Actions");
 
-    Label actions_label {
-        halign: start;
-        lines: 1;
-        ellipsize: end;
+		styles [
+			"heading",
+		]
+	}
 
-        label: _("Actions");
-
-        styles [
-            "heading",
-        ]
-    }
-
-    Box actions_box {
-        orientation: vertical;
-        spacing: 8;
-    }
+	Box actions_box {
+		orientation: vertical;
+		spacing: 8;
+	}
 }

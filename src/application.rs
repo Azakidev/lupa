@@ -7,13 +7,12 @@
 
 use adw::{gdk::Display, gio, glib, prelude::*, subclass::prelude::*};
 use std::cell::OnceCell;
+use gettextrs::gettext;
 
-use crate::{LupaWindow, config::LupaConfig};
+use crate::{LupaWindow, config::{DEFAULT_CONFIG, LupaConfig}};
 
 mod imp {
-    use gettextrs::gettext;
 
-    use crate::config::DEFAULT_CONFIG;
 
     use super::*;
 

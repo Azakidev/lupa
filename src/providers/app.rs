@@ -5,6 +5,13 @@
  * SPDX-License-Identifier: MIT
  */
 
+use adw::{
+    glib::{self, WeakRef},
+    prelude::*,
+    subclass::prelude::*,
+};
+use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
+use icon_finder::find_icon;
 use std::{
     cell::{OnceCell, RefCell},
     collections::HashMap,
@@ -15,11 +22,6 @@ use std::{
     path::{Path, PathBuf},
     process::Command,
 };
-
-use adw::{glib::WeakRef, prelude::*, subclass::prelude::*};
-use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
-use gtk::glib;
-use icon_finder::find_icon;
 
 use crate::{
     components::entry::LupaEntry, providers::provider::Provider, utils::spawn_with_new_session,
@@ -47,7 +49,7 @@ impl Provider for AppProvider {
         let apps = discover_apps().unwrap_or_default();
 
         for app in apps {
-            let entry = self.make_entry(app, win);
+            let entry = self.make_entry(app, &win);
 
             results.append(&entry);
         }
@@ -109,20 +111,10 @@ impl Provider for AppProvider {
 
 impl AppProvider {
     fn make_entry(&self, app: App, win: &LupaWindow) -> LupaEntry {
-        let icon_name = app.icon.as_ref().map_or("", |s| s.as_str());
-
-        let icon = find_icon_path(icon_name, self.icon_size.get().copied().unwrap());
-
-        let icon = if let Some(icon_path) = icon {
-            icon_path.to_string_lossy().to_string()
-        } else {
-            "".to_owned()
-        };
-
         let entry = LupaEntry::new(
             &app.name,
             None,
-            Some(&icon),
+            Some(""),
             true,
             app.is_flatpak,
             self.icon_size.get().copied(),
@@ -156,6 +148,26 @@ impl AppProvider {
                 }
             ),
         );
+
+        glib::idle_add_local_once(glib::clone!(
+            #[weak]
+            entry,
+            #[strong(rename_to=icon_name)]
+            app.icon.unwrap_or("".to_string()),
+            #[strong(rename_to=icon_size)]
+            self.icon_size.get().copied().unwrap(),
+            move || {
+                let icon = find_icon_path(&icon_name, icon_size);
+
+                let icon = if let Some(icon_path) = icon {
+                    icon_path.to_string_lossy().to_string()
+                } else {
+                    "".to_owned()
+                };
+
+                entry.imp().icon.set_from_file(Some(icon));
+            }
+        ));
 
         self.cache.borrow_mut().insert(app.name, entry.downgrade());
         entry

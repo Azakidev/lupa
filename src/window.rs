@@ -15,7 +15,11 @@ use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
 use std::cell::RefCell;
 
 use crate::{
-    application::LupaApplication, components::entry::LupaEntry, config::LupaConfig, providers::{app::AppProvider, calc::CalcProvider, file::FileProvider, provider::Provider}, utils::first_visible_child
+    application::LupaApplication,
+    components::entry::LupaEntry,
+    config::LupaConfig,
+    providers::{app::AppProvider, calc::CalcProvider, file::FileProvider, provider::Provider},
+    utils::first_visible_child,
 };
 
 mod imp {
@@ -126,10 +130,10 @@ impl LupaWindow {
     }
 
     fn setup_providers(&self) {
-        glib::spawn_future_local(glib::clone!(
+        glib::idle_add_local_once(glib::clone!(
             #[weak(rename_to=win)]
             self,
-            async move {
+            move || {
                 let imp = win.imp();
 
                 imp.app_provider.prepare(&win);
@@ -183,8 +187,7 @@ impl LupaWindow {
             #[weak]
             results,
             move |_| {
-                if let Some(entry) = first_visible_child(&results).and_downcast::<LupaEntry>()
-                {
+                if let Some(entry) = first_visible_child(&results).and_downcast::<LupaEntry>() {
                     entry.activate();
                 }
             }

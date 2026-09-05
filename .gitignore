@@ -4,3 +4,5 @@ target/
 # Localization
 po/*.pot
 po/*.po~
+
+*.syscap

@@ -6,10 +6,7 @@
  */
 
 use std::{
-    cell::{OnceCell, RefCell},
-    collections::HashMap,
-    path::Path,
-    process::Command,
+    cell::{OnceCell, RefCell}, collections::HashMap, env, path::Path, process::Command,
 };
 
 use adw::{
@@ -171,7 +168,13 @@ impl SidebarProvider for FileProvider {
         let icon = imp.icon.icon_name().unwrap();
         let size = *self.icon_size.get().unwrap();
 
-        let sidebar = LupaSidebarContent::new(&file, Some(&path), Some(&icon), size, false);
+        let trimmed = if let Ok(home) = env::var("HOME") {
+            path.replace(&home, "~")
+        } else {
+            path.clone()
+        };
+
+        let sidebar = LupaSidebarContent::new(&file, Some(&trimmed), Some(&icon), size, false);
 
         // Open in browser
         sidebar.add_action(

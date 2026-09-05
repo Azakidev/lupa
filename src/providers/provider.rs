@@ -5,7 +5,10 @@
  * SPDX-License-Identifier: MIT
  */
 
-use crate::{components::{entry::LupaEntry, sidebar::LupaSidebarContent}, window::LupaWindow};
+use crate::{
+    components::{entry::LupaEntry, sidebar::LupaSidebarContent},
+    window::LupaWindow,
+};
 
 pub trait Provider {
     const PREFIX: char;

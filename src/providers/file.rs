@@ -6,7 +6,11 @@
  */
 
 use std::{
-    cell::{OnceCell, RefCell}, collections::HashMap, env, path::Path, process::Command,
+    cell::{OnceCell, RefCell},
+    collections::HashMap,
+    env,
+    path::Path,
+    process::Command,
 };
 
 use adw::{
@@ -49,8 +53,8 @@ impl Provider for FileProvider {
     fn hide_entries(&self) {
         self.cache
             .borrow()
-            .iter()
-            .filter_map(|(_, weak)| weak.upgrade())
+            .values()
+            .filter_map(|weak| weak.upgrade())
             .for_each(|entry| entry.set_visible(false));
     }
 
@@ -134,7 +138,7 @@ impl Provider for FileProvider {
                         path,
                         win,
                         &results,
-                        self.icon_size.get().and_then(|s| Some(*s)),
+                        self.icon_size.get().copied(),
                     );
                 }
             });
@@ -193,7 +197,7 @@ impl SidebarProvider for FileProvider {
                     if path.is_dir() {
                         command.arg(&filepath);
                     } else {
-                        command.arg(&path.parent().unwrap_or(&path));
+                        command.arg(path.parent().unwrap_or(path));
                     }
 
                     if let Err(e) = spawn_with_new_session(&mut command) {
@@ -235,16 +239,11 @@ impl FileProvider {
     ) -> LupaEntry {
         // File exists, we checked, so it should have a name
         let filepath = file.to_str().map(|s| s.to_string()).unwrap();
-        let icon = build_icon(&file);
+        let icon = build_icon(file);
 
         let prov = Self::default();
         prov.icon_size
-            .set(
-                self.icon_size
-                    .get()
-                    .and_then(|n| Some(*n))
-                    .unwrap_or_default(),
-            )
+            .set(self.icon_size.get().copied().unwrap_or_default())
             .expect("Failed to copy icon size");
 
         let entry = LupaEntry::new(

@@ -150,7 +150,7 @@ impl LupaEntry {
                     sidebar.set_child(Some(&content));
                     view.set_show_sidebar(true);
 
-                    if let Some(child) = (&content.imp().actions_box).first_child() {
+                    if let Some(child) = content.imp().actions_box.first_child() {
                         child.grab_focus();
                     }
                 } else {

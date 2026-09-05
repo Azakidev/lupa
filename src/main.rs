@@ -39,8 +39,7 @@ fn main() -> glib::ExitCode {
     gio::resources_register_include!("lupa.gresource").expect("Could not load resources");
 
     // Create app
-    let app =
-        LupaApplication::new("art.fatdawlf.Lupa", &gio::ApplicationFlags::empty());
+    let app = LupaApplication::new("art.fatdawlf.Lupa", &gio::ApplicationFlags::empty());
 
     app.run()
 }

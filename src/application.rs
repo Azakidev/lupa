@@ -6,13 +6,15 @@
  */
 
 use adw::{gdk::Display, gio, glib, prelude::*, subclass::prelude::*};
-use std::cell::OnceCell;
 use gettextrs::gettext;
+use std::cell::OnceCell;
 
-use crate::{LupaWindow, config::{DEFAULT_CONFIG, LupaConfig}};
+use crate::{
+    LupaWindow,
+    config::{DEFAULT_CONFIG, LupaConfig},
+};
 
 mod imp {
-
 
     use super::*;
 
@@ -56,7 +58,7 @@ mod imp {
 
             // Get the current window or create one if necessary
             let window = application.active_window().unwrap_or_else(|| {
-                let window = LupaWindow::new(&*application, &config);
+                let window = LupaWindow::new(&*application, config);
                 application.setup_window_config(&window);
                 window.upcast()
             });

@@ -49,7 +49,7 @@ impl Provider for AppProvider {
         let apps = discover_apps().unwrap_or_default();
 
         for app in apps {
-            let entry = self.make_entry(app, &win);
+            let entry = self.make_entry(app, win);
 
             results.append(&entry);
         }
@@ -58,8 +58,8 @@ impl Provider for AppProvider {
     fn hide_entries(&self) {
         self.cache
             .borrow()
-            .iter()
-            .filter_map(|(_, weak)| weak.upgrade())
+            .values()
+            .filter_map(|weak| weak.upgrade())
             .for_each(|entry| entry.set_visible(false));
     }
 

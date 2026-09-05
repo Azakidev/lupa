@@ -8,10 +8,7 @@
 use adw::{glib, prelude::*, subclass::prelude::*};
 use std::cell::OnceCell;
 
-use crate::{
-    providers::{app::App, provider::SidebarProvider},
-    window::LupaWindow,
-};
+use crate::{providers::provider::SidebarProvider, window::LupaWindow};
 
 mod imp {
 
@@ -29,7 +26,6 @@ mod imp {
         #[template_child]
         pub comment: TemplateChild<gtk::Label>,
 
-        pub app: OnceCell<App>,
         pub provider: OnceCell<Box<dyn SidebarProvider>>,
     }
 

@@ -31,6 +31,8 @@ use crate::{
 #[derive(Default)]
 pub struct AppProvider {
     icon_size: OnceCell<u32>,
+    max_entries: OnceCell<u32>,
+    apps: OnceCell<Vec<App>>,
     cache: RefCell<HashMap<String, WeakRef<LupaEntry>>>,
     matcher: SkimMatcherV2,
 }
@@ -42,17 +44,12 @@ impl Provider for AppProvider {
         self.icon_size
             .set(win.icon_size())
             .expect("Failed to set icon size");
-
-        let imp = win.imp();
-        let results = &imp.results;
+        self.max_entries
+            .set(win.max_file_entries())
+            .expect("Failed to set file entry limit");
 
         let apps = discover_apps().unwrap_or_default();
-
-        for app in apps {
-            let entry = self.make_entry(app, win);
-
-            results.append(&entry);
-        }
+        self.apps.set(apps).expect("Failed to set apps");
     }
 
     fn hide_entries(&self) {
@@ -64,14 +61,20 @@ impl Provider for AppProvider {
     }
 
     fn update_entries(&self, query: &str, win: &LupaWindow) {
-        let cache = self.cache.borrow();
+        let mut cache = self.cache.borrow_mut();
         let matcher = &self.matcher;
         let results = win.imp().results.get();
+        let max_entries = *self.max_entries.get().unwrap() as usize;
+
+        let Some(apps) = self.apps.get() else {
+            return;
+        };
 
         let query = query.strip_prefix(Self::PREFIX).unwrap_or(query);
 
-        let mut filtered = cache
-            .keys()
+        let mut filtered = apps
+            .iter()
+            .map(|app| app.name.clone())
             .filter(|a| {
                 query
                     .to_lowercase()
@@ -94,10 +97,25 @@ impl Provider for AppProvider {
 
         let mut prev: Option<WeakRef<LupaEntry>> = None;
 
-        for a in filtered.iter().map(|(a, _)| a.clone()).rev() {
-            if let Some(weak) = cache.get(&a)
-                && let Some(entry) = weak.upgrade()
-            {
+        for a in filtered
+            .iter()
+            .map(|(a, _)| a.clone())
+            .take(max_entries)
+            .rev()
+        {
+            let entry = if let Some(weak) = cache.get(&a) {
+                weak.upgrade()
+            } else {
+                if let Some(app) = apps.iter().find(|app| app.name == a) {
+                    let entry = self.make_entry(&mut cache, app.clone(), win);
+                    results.append(&entry);
+                    Some(entry)
+                } else {
+                    None
+                }
+            };
+
+            if let Some(entry) = entry {
                 if let Some(prev_weak) = prev {
                     results.reorder_child_after(&entry, prev_weak.upgrade().as_ref());
                 }
@@ -110,7 +128,12 @@ impl Provider for AppProvider {
 }
 
 impl AppProvider {
-    fn make_entry(&self, app: App, win: &LupaWindow) -> LupaEntry {
+    fn make_entry(
+        &self,
+        cache: &mut HashMap<String, WeakRef<LupaEntry>>,
+        app: App,
+        win: &LupaWindow,
+    ) -> LupaEntry {
         let entry = LupaEntry::new(
             &app.name,
             None,
@@ -149,14 +172,14 @@ impl AppProvider {
             ),
         );
 
-        glib::idle_add_local_once(glib::clone!(
+        glib::spawn_future_local(glib::clone!(
             #[weak]
             entry,
             #[strong(rename_to=icon_name)]
             app.icon.unwrap_or("".to_string()),
             #[strong(rename_to=icon_size)]
             self.icon_size.get().copied().unwrap(),
-            move || {
+            async move {
                 let icon = find_icon_path(&icon_name, icon_size);
 
                 let icon = if let Some(icon_path) = icon {
@@ -169,7 +192,7 @@ impl AppProvider {
             }
         ));
 
-        self.cache.borrow_mut().insert(app.name, entry.downgrade());
+        cache.insert(app.name, entry.downgrade());
         entry
     }
 }

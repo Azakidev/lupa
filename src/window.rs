@@ -189,14 +189,22 @@ impl LupaWindow {
 
                 obj.imp().sidebar_view.set_show_sidebar(false);
 
-                obj.update_results(&text);
+                glib::idle_add_local_once(glib::clone!(
+                    #[weak]
+                    obj,
+                    #[strong]
+                    text,
+                    move || {
+                        obj.update_results(&text);
 
-                if text.is_empty() || first_visible_child(&results).is_none() {
-                    obj.shrink();
-                    revealer.set_reveal_child(false);
-                } else {
-                    revealer.set_reveal_child(true);
-                }
+                        if text.is_empty() || first_visible_child(&results).is_none() {
+                            obj.shrink();
+                            revealer.set_reveal_child(false);
+                        } else {
+                            revealer.set_reveal_child(true);
+                        }
+                    }
+                ));
             }
         ));
 

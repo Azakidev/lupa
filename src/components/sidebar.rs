@@ -22,6 +22,8 @@ mod imp {
         pub subtitle: TemplateChild<gtk::Label>,
         #[template_child]
         pub actions_box: TemplateChild<gtk::Box>,
+        #[template_child]
+        pub actions_label: TemplateChild<gtk::Label>,
     }
 
     #[glib::object_subclass]
@@ -105,6 +107,8 @@ impl LupaSidebarContent {
         icon: Option<&str>,
         action: F,
     ) {
+        self.imp().actions_label.set_visible(true);
+
         let content = adw::ButtonContent::builder()
             .halign(gtk::Align::Start)
             .margin_start(14)

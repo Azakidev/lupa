@@ -24,7 +24,9 @@ use std::{
 };
 
 use crate::{
-    components::entry::LupaEntry, providers::provider::Provider, utils::spawn_with_new_session,
+    components::{entry::LupaEntry, sidebar::LupaSidebarContent},
+    providers::provider::{Provider, SidebarProvider},
+    utils::spawn_with_new_session,
     window::LupaWindow,
 };
 
@@ -127,6 +129,71 @@ impl Provider for AppProvider {
     }
 }
 
+impl SidebarProvider for AppProvider {
+    fn populate_sidebar(&self, entry: &LupaEntry, win: &LupaWindow) -> LupaSidebarContent {
+        let apps = self.apps.get().unwrap(); // Cannot be empty, already selected an app
+        let app = apps
+            .iter()
+            .find(|a| &a.name == entry.imp().name.text().as_str())
+            .unwrap();
+
+        let comment = app.comment.as_ref().map(|s| s.as_str());
+
+        let icon_name = app.icon.clone().unwrap_or("".to_string());
+        let icon_size = self.icon_size.get().copied().unwrap();
+
+        let icon = find_icon_path(&icon_name, icon_size);
+
+        let icon = if let Some(icon_path) = icon {
+            icon_path.to_string_lossy().to_string()
+        } else {
+            "".to_owned()
+        };
+
+        let sidebar = LupaSidebarContent::new(&app.name, comment, Some(&icon), icon_size, true);
+
+        for action in &app.actions {
+            let icon_name = action
+                .icon
+                .clone()
+                .unwrap_or("external-link-symbolic".to_string());
+
+            sidebar.add_action(
+                &action.name,
+                Some(&icon_name),
+                glib::clone!(
+                    #[weak]
+                    win,
+                    #[strong]
+                    action,
+                    move |_| {
+                        let raw_command: Vec<_> = action
+                            .exec
+                            .split_whitespace()
+                            .filter(|chunk| !chunk.is_empty() && !chunk.starts_with("%"))
+                            .collect();
+
+                        let [binary, args @ ..] = raw_command.as_slice() else {
+                            return;
+                        };
+
+                        let mut command = Command::new(binary);
+                        command.args(args);
+
+                        if let Err(e) = spawn_with_new_session(&mut command) {
+                            eprintln!("Failed to spawn process: {}", e);
+                            return;
+                        }
+                        win.close();
+                    }
+                ),
+            );
+        }
+
+        sidebar
+    }
+}
+
 impl AppProvider {
     fn make_entry(
         &self,
@@ -134,14 +201,29 @@ impl AppProvider {
         app: App,
         win: &LupaWindow,
     ) -> LupaEntry {
+        let comment = app.comment.as_ref().map(|s| s.as_str());
+
+        let provider = Self::default();
+        provider
+            .icon_size
+            .set(self.icon_size.get().copied().unwrap_or(24))
+            .expect("Failed to transfer icon size");
+
+        if let Some(apps) = self.apps.get() {
+            provider
+                .apps
+                .set(apps.clone())
+                .expect("Failed to transfer apps");
+        }
+
         let entry = LupaEntry::new(
             &app.name,
-            None,
+            comment,
             Some(""),
             true,
             app.is_flatpak,
             self.icon_size.get().copied(),
-            None,
+            Some(Box::new(provider)),
             win,
             glib::clone!(
                 #[weak]
@@ -171,6 +253,11 @@ impl AppProvider {
                 }
             ),
         );
+
+        entry
+            .imp()
+            .comment
+            .set_ellipsize(gtk::pango::EllipsizeMode::End);
 
         glib::spawn_future_local(glib::clone!(
             #[weak]
@@ -204,6 +291,15 @@ pub struct App {
     pub comment: Option<String>,
     pub icon: Option<String>,
     pub is_flatpak: bool,
+    pub actions: Vec<AppAction>,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct AppAction {
+    pub id: String,
+    pub name: String,
+    pub exec: String,
+    pub icon: Option<String>,
 }
 
 pub fn discover_apps() -> Option<Vec<App>> {
@@ -262,7 +358,10 @@ pub fn discover_apps() -> Option<Vec<App>> {
 
 fn parse_desktop_entry(content: &str, current_desktop: &str, is_flatpak: bool) -> Option<App> {
     let mut app = App::default();
+    let mut action = AppAction::default();
+
     let mut in_main_section = false;
+    let mut in_action_section = false;
 
     let mut has_name = false;
     let mut has_exec = false;
@@ -279,10 +378,22 @@ fn parse_desktop_entry(content: &str, current_desktop: &str, is_flatpak: bool) -
         }
 
         if line.starts_with('[') {
-            if in_main_section {
-                break;
+            if in_action_section {
+                if action.name != String::default() && action.exec != String::default() {
+                    app.actions.push(action.clone());
+                }
+                action = AppAction::default();
             }
+
             in_main_section = line == "[Desktop Entry]";
+            in_action_section = line.starts_with("[Desktop Action");
+
+            if in_action_section {
+                action.id = line
+                    .replace("[Desktop Action", "")
+                    .replace("]", "")
+                    .to_string();
+            }
             continue;
         }
 
@@ -328,7 +439,19 @@ fn parse_desktop_entry(content: &str, current_desktop: &str, is_flatpak: bool) -
                 }
                 "Icon" => app.icon = Some(value.to_string()),
                 "Comment" => app.comment = Some(value.to_string()),
-                _ => {}
+                _ => {} // No-op
+            }
+        }
+
+        if in_action_section && let Some((key, value)) = line.split_once('=') {
+            let key = key.trim();
+            let value = value.trim();
+
+            match key {
+                "Name" => action.name = value.to_string(),
+                "Icon" => action.icon = Some(value.to_string()),
+                "Exec" => action.exec = value.to_string(),
+                _ => {} // No-op
             }
         }
     }

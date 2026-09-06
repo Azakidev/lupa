@@ -20,13 +20,7 @@ Some implementation details are heavily based in
 [lucien](https://github.com/Wachamuli/lucien).
 
 ## TO-DO
-- [x] Contain app entry logic to app provider
-- [x] A better calculator icon
 - [ ] Stateful search icon, morphs depending on prefix
-- [ ] Side panel
-    - [x] General implementation
-    - [x] Files side panel
-    - [ ] Apps side panel
-        - [ ] Get entries from desktop file
-        - [ ] Generate side panel
+- [ ] More providers
+    - [ ] System actions (Shutdown, reboot, etc.)
 - [ ] Usage documentation

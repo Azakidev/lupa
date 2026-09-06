@@ -11,6 +11,7 @@ use adw::{
     subclass::prelude::*,
 };
 use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
+use gettextrs::gettext;
 use icon_finder::find_icon;
 use std::{
     cell::{OnceCell, RefCell},
@@ -190,6 +191,35 @@ impl SidebarProvider for AppProvider {
             );
         }
 
+        // Open .desktop location
+        sidebar.add_action(
+            &gettext("Open entry location"),
+            Some("external-link-symbolic"),
+            glib::clone!(
+                #[weak]
+                win,
+                #[strong(rename_to=filepath)]
+                app.location,
+                move |_| {
+                    let path = Path::new(&filepath);
+
+                    let mut command = Command::new("xdg-open");
+
+                    if path.is_dir() {
+                        command.arg(&filepath);
+                    } else {
+                        command.arg(path.parent().unwrap_or(path));
+                    }
+
+                    if let Err(e) = spawn_with_new_session(&mut command) {
+                        eprint!("[Error] Failed to open file: {}", e);
+                    }
+
+                    win.close();
+                }
+            ),
+        );
+
         sidebar
     }
 }
@@ -286,6 +316,7 @@ impl AppProvider {
 
 #[derive(Debug, Default, Clone)]
 pub struct App {
+    pub location: String,
     pub name: String,
     pub exec: String,
     pub comment: Option<String>,
@@ -338,8 +369,8 @@ pub fn discover_apps() -> Option<Vec<App>> {
                     {
                         let path = entry.path();
 
-                        if let Ok(buf) = fs::read_to_string(path) {
-                            parse_desktop_entry(&buf, &desktop, is_flatpak)
+                        if let Ok(buf) = fs::read_to_string(&path) {
+                            parse_desktop_entry(&buf, &path.to_string_lossy(), &desktop, is_flatpak)
                         } else {
                             None
                         }
@@ -356,7 +387,7 @@ pub fn discover_apps() -> Option<Vec<App>> {
     Some(apps)
 }
 
-fn parse_desktop_entry(content: &str, current_desktop: &str, is_flatpak: bool) -> Option<App> {
+fn parse_desktop_entry(content: &str, location: &str, current_desktop: &str, is_flatpak: bool) -> Option<App> {
     let mut app = App::default();
     let mut action = AppAction::default();
 
@@ -369,6 +400,7 @@ fn parse_desktop_entry(content: &str, current_desktop: &str, is_flatpak: bool) -
     let mut should_hide = false;
 
     app.is_flatpak = is_flatpak;
+    app.location = location.to_string();
 
     for line in content.lines() {
         let line = line.trim();

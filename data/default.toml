@@ -12,7 +12,7 @@
 # entries=5.0 # Float (Default: 5.0, Range: [0–f32 limit])
 
 # The height of each entry
-# entry_size=64 # Integer (Default: 64, Range: [0–u32 limit])
+# entry_size=64 # Integer (Default: 64, Range: [0~u16 limit, but do you really want to])
 
 # The anchors for the launcher window
 # Separate valid values by commas as shown

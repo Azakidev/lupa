@@ -104,7 +104,7 @@ glib::wrapper! {
 
 impl LupaWindow {
     pub fn new<P: IsA<gtk::Application>>(application: &P, config: &LupaConfig) -> Self {
-        let icon_size = config.aesthetic.entry_size - 4;
+        let icon_size = config.aesthetic.entry_size;
         let max_file_entries = config.beavior.max_file_entries;
         let anchors = config.aesthetic.anchors.clone();
 

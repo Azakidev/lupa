@@ -124,7 +124,7 @@ impl LupaApplication {
         let radius = config.aesthetic.radius;
 
         let entry_size = config.aesthetic.entry_size;
-        let icon_size = entry_size - 4;
+        let icon_size = entry_size as f32 * 0.8;
 
         provider.load_from_string(&format!(
             "

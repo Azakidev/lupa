@@ -25,6 +25,8 @@ mod imp {
         pub name: TemplateChild<gtk::Label>,
         #[template_child]
         pub comment: TemplateChild<gtk::Label>,
+        #[template_child]
+        pub labels: TemplateChild<gtk::Box>,
 
         pub provider: OnceCell<Box<dyn SidebarProvider>>,
     }
@@ -113,6 +115,7 @@ impl LupaEntry {
             icon.set_height_request(size as i32);
         } else {
             icon.set_visible(false);
+            let _ = &imp.labels.set_margin_start(12);
         }
 
         if is_flatpak {

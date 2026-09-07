@@ -11,3 +11,4 @@ pub mod app;
 pub mod calc;
 pub mod file;
 pub mod system;
+pub mod emoji;

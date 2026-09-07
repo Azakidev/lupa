@@ -32,6 +32,7 @@ evalexpr = "13.1"
 mime-type = "0.2"
 urlencoding = "2.1"
 system_shutdown = "4.1"
+emojis = "0.9"
 
 [build-dependencies]
 glib-build-tools = "0.22"

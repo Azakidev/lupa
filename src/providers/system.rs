@@ -47,6 +47,7 @@ impl Provider for SystemProvider {
         let matcher = &self.matcher;
         let results = win.imp().results.get();
 
+        let is_explicit = query.starts_with(self.prefix());
         let query = query.strip_prefix(self.prefix()).unwrap_or(query);
 
         let mut filtered = cache
@@ -54,7 +55,11 @@ impl Provider for SystemProvider {
             .filter_map(|weak| {
                 if let Some(e) = weak.upgrade()
                     && let Some(score) = matcher.fuzzy_match(&e.imp().name.text(), query)
-                    && score.is_positive()
+                    && if is_explicit {
+                        score.is_positive()
+                    } else {
+                        score >= 65
+                    }
                 {
                     Some((e, score))
                 } else {

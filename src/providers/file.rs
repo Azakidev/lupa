@@ -97,11 +97,12 @@ impl Provider for FileProvider {
             .trim()
             .lines()
             .filter_map(|l| {
-                let Ok(res) = decode(l) else {
+                if let Ok(res) = decode(l) {
+                    Some(res.replace("file://", ""))
+                } else {
                     eprintln!("[Warn] Couldn't decode {}", l);
-                    return None;
-                };
-                Some(res.replace("file://", ""))
+                    None
+                }
             })
             .filter_map(|f| {
                 let path = Path::new(&f);

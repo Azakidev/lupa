@@ -5,6 +5,7 @@
         <file compressed="true" preprocess="xml-stripblanks">icons/clipboard-symbolic.svg</file>
         <file compressed="true" preprocess="xml-stripblanks">icons/equals-symbolic.svg</file>
         <file compressed="true" preprocess="xml-stripblanks">icons/background-app-sleepyface-symbolic.svg</file>
+        <file compressed="true" preprocess="xml-stripblanks">icons/smile-symbolic.svg</file>
         <file compressed="true">style.css</file>
     </gresource>
 </gresources>

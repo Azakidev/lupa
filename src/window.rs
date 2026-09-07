@@ -19,8 +19,8 @@ use crate::{
     components::entry::LupaEntry,
     config::LupaConfig,
     providers::{
-        app::AppProvider, calc::CalcProvider, file::FileProvider, provider::Provider,
-        system::SystemProvider,
+        app::AppProvider, calc::CalcProvider, emoji::EmojiProvider, file::FileProvider,
+        provider::Provider, system::SystemProvider,
     },
     utils::first_visible_child,
 };
@@ -57,6 +57,7 @@ mod imp {
         pub calc_provider: CalcProvider,
         pub file_provider: FileProvider,
         pub system_provider: SystemProvider,
+        pub emoji_provider: EmojiProvider,
     }
 
     #[glib::object_subclass]
@@ -145,6 +146,7 @@ impl LupaWindow {
                 imp.calc_provider.prepare(&win);
                 imp.file_provider.prepare(&win);
                 imp.system_provider.prepare(&win);
+                imp.emoji_provider.prepare(&win);
             }
         ));
     }
@@ -166,9 +168,18 @@ impl LupaWindow {
         controller.connect_key_released(glib::clone!(
             #[weak(rename_to=view)]
             &self.imp().sidebar_view,
+            #[weak(rename_to=input)]
+            &self.imp().input,
             move |_, key, _, _| {
                 if key == gtk::gdk::Key::Left {
                     view.set_show_sidebar(false);
+
+                    if let Some(child) = input.first_child()
+                        && let Some(text) = child.downcast_ref::<gtk::Text>()
+                        && !text.has_focus()
+                    {
+                        input.grab_focus();
+                    }
                 }
             }
         ));
@@ -231,6 +242,7 @@ impl LupaWindow {
         imp.calc_provider.hide_entries();
         imp.file_provider.hide_entries();
         imp.system_provider.hide_entries();
+        imp.emoji_provider.hide_entries();
     }
 
     fn update_results(&self, query: &str) {
@@ -251,12 +263,16 @@ impl LupaWindow {
             q if q.starts_with(SystemProvider::PREFIX) => {
                 imp.system_provider.update_entries(query, self);
             }
+            q if q.starts_with(EmojiProvider::PREFIX) => {
+                imp.emoji_provider.update_entries(query, self);
+            }
             // Run all if no prefix is selected
             _ => {
-                imp.app_provider.update_entries(query, self);
-                imp.calc_provider.update_entries(query, self);
-                imp.file_provider.update_entries(query, self);
                 imp.system_provider.update_entries(query, self);
+                imp.emoji_provider.update_entries(query, self);
+                imp.app_provider.update_entries(query, self);
+                imp.file_provider.update_entries(query, self);
+                imp.calc_provider.update_entries(query, self);
             }
         }
     }

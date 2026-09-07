@@ -56,6 +56,7 @@ glib::wrapper! {
 }
 
 impl LupaEntry {
+    #[allow(clippy::too_many_arguments)]
     pub fn new<F: Fn(&LupaEntry) + 'static>(
         title: &str,
         subtitle: Option<&str>,

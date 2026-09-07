@@ -135,10 +135,10 @@ impl SidebarProvider for AppProvider {
         let apps = self.apps.get().unwrap(); // Cannot be empty, already selected an app
         let app = apps
             .iter()
-            .find(|a| &a.name == entry.imp().name.text().as_str())
+            .find(|a| a.name == entry.imp().name.text().as_str())
             .unwrap();
 
-        let comment = app.comment.as_ref().map(|s| s.as_str());
+        let comment = app.comment.as_deref();
 
         let icon_name = app.icon.clone().unwrap_or("".to_string());
         let icon_size = self.icon_size.get().copied().unwrap();
@@ -231,7 +231,7 @@ impl AppProvider {
         app: App,
         win: &LupaWindow,
     ) -> LupaEntry {
-        let comment = app.comment.as_ref().map(|s| s.as_str());
+        let comment = app.comment.as_deref();
 
         let provider = Self::default();
         provider
@@ -387,7 +387,12 @@ pub fn discover_apps() -> Option<Vec<App>> {
     Some(apps)
 }
 
-fn parse_desktop_entry(content: &str, location: &str, current_desktop: &str, is_flatpak: bool) -> Option<App> {
+fn parse_desktop_entry(
+    content: &str,
+    location: &str,
+    current_desktop: &str,
+    is_flatpak: bool,
+) -> Option<App> {
     let mut app = App::default();
     let mut action = AppAction::default();
 

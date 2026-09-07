@@ -62,8 +62,10 @@ impl Provider for EmojiProvider {
 
         let mut filtered = emojis::iter()
             .filter_map(|e| {
-                if let Some(score) = matcher.fuzzy_match(e.shortcode().unwrap_or(e.name()), query)
-                    && score >= 60
+                if let Some(score) = matcher.fuzzy_match(
+                    &e.shortcode().unwrap_or(e.name()).replace("_", " "),
+                    &query.replace("_", " "),
+                ) && score >= 60
                 {
                     Some((e, score))
                 } else {

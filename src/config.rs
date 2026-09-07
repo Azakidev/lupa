@@ -34,7 +34,7 @@ pub struct Aesthetic {
     pub radius: u32,
     pub entries: f32,
     pub entry_size: u32,
-    pub anchors: String
+    pub anchors: String,
 }
 
 impl Default for Aesthetic {

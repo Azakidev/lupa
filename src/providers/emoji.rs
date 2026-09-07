@@ -47,8 +47,8 @@ impl Provider for EmojiProvider {
     fn hide_entries(&self) {
         self.cache
             .borrow()
-            .iter()
-            .filter_map(|(_, weak)| weak.upgrade())
+            .values()
+            .filter_map(|weak| weak.upgrade())
             .for_each(|entry| entry.set_visible(false));
     }
 
@@ -126,7 +126,7 @@ impl SidebarProvider for EmojiProvider {
                         #[strong(rename_to=emoji)]
                         e.as_str(),
                         move |b| {
-                            b.clipboard().set_text(&emoji);
+                            b.clipboard().set_text(emoji);
 
                             win.close();
                         }
@@ -143,7 +143,7 @@ impl SidebarProvider for EmojiProvider {
                     #[strong(rename_to=emoji)]
                     emoji.as_str(),
                     move |b| {
-                        b.clipboard().set_text(&emoji);
+                        b.clipboard().set_text(emoji);
 
                         win.close();
                     }

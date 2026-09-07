@@ -73,7 +73,7 @@ impl Provider for AppProvider {
             return;
         };
 
-        let query = query.strip_prefix(Self::PREFIX).unwrap_or(query);
+        let query = query.strip_prefix(self.prefix()).unwrap_or(query);
 
         let mut filtered = apps
             .iter()
@@ -194,7 +194,7 @@ impl SidebarProvider for AppProvider {
         // Open .desktop location
         sidebar.add_action(
             &gettext("Open entry location"),
-            Some("external-link-symbolic"),
+            Some("document-open-symbolic"),
             glib::clone!(
                 #[weak]
                 win,

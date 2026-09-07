@@ -22,5 +22,5 @@ Some implementation details are heavily based in
 ## TO-DO
 - [ ] Stateful search icon, morphs depending on prefix
 - [ ] More providers
-    - [ ] System actions (Shutdown, reboot, etc.)
+    - [x] System actions (Shutdown, reboot, etc.)
 - [ ] Usage documentation

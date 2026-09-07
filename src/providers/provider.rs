@@ -18,6 +18,10 @@ pub trait Provider {
     fn hide_entries(&self);
 
     fn update_entries(&self, query: &str, win: &LupaWindow);
+
+    fn prefix(&self) -> char {
+        Self::PREFIX
+    }
 }
 
 pub trait SidebarProvider {

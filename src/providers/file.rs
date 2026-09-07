@@ -65,7 +65,7 @@ impl Provider for FileProvider {
         let results = win.imp().results.get();
 
         // /query/path/with/folder/
-        let query = query.strip_prefix(Self::PREFIX).unwrap_or(query);
+        let query = query.strip_prefix(self.prefix()).unwrap_or(query);
 
         if query.is_empty() {
             return;

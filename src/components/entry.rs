@@ -113,6 +113,10 @@ impl LupaEntry {
 
             icon.set_width_request(size as i32);
             icon.set_height_request(size as i32);
+
+            if size != 60 {
+                icon.set_pixel_size(size as i32 - 4);
+            }
         } else {
             icon.set_visible(false);
             let _ = &imp.labels.set_margin_start(12);

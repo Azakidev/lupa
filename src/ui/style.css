@@ -1,3 +1,7 @@
+:root {
+    --window-bg: rgb(from var(--window-bg-color) r g b / var(--lupa-opacity));
+}
+
 .launcher {
     background-color: var(--window-bg);
 }
@@ -21,4 +25,8 @@
 
 .emoji_label {
     font-size: var(--icon-size);
+}
+
+.card {
+    background-color: hsl(from var(--card-bg-color) h calc(s * 1.2) calc(l * (1.1 / var(--lupa-opacity))) / calc(var(--lupa-opacity) / 1.5));
 }

@@ -129,7 +129,7 @@ impl LupaApplication {
         provider.load_from_string(&format!(
             "
             :root {{
-                --window-bg: rgb(from var(--window-bg-color) r g b / {opacity});
+                --lupa-opacity: {opacity};
                 --icon-size: {icon_size}px;
             }}
 

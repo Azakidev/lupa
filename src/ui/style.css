@@ -18,3 +18,7 @@
 .flatpak {
     color: #4A90D9;
 }
+
+.emoji_label {
+    font-size: var(--icon-size);
+}

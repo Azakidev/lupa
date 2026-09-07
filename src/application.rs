@@ -124,11 +124,13 @@ impl LupaApplication {
         let radius = config.aesthetic.radius;
 
         let entry_size = config.aesthetic.entry_size;
+        let icon_size = entry_size - 4;
 
         provider.load_from_string(&format!(
             "
             :root {{
                 --window-bg: rgb(from var(--window-bg-color) r g b / {opacity});
+                --icon-size: {icon_size}px;
             }}
 
             .launcher {{

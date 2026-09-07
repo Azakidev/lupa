@@ -34,6 +34,7 @@ pub struct Aesthetic {
     pub radius: u32,
     pub entries: f32,
     pub entry_size: u32,
+    pub anchors: String
 }
 
 impl Default for Aesthetic {
@@ -43,6 +44,7 @@ impl Default for Aesthetic {
             radius: 12,
             entries: 5.0,
             entry_size: 64,
+            anchors: String::new(),
         }
     }
 }

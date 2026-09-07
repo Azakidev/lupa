@@ -51,6 +51,8 @@ mod imp {
         pub icon_size: RefCell<u32>,
         #[property(get, set)]
         pub max_file_entries: RefCell<u32>,
+        #[property(get, set)]
+        pub anchors: RefCell<String>,
 
         // Providers
         pub app_provider: AppProvider,
@@ -86,17 +88,6 @@ mod imp {
         fn property(&self, id: usize, pspec: &glib::ParamSpec) -> glib::Value {
             Self::derived_property(self, id, pspec)
         }
-
-        fn constructed(&self) {
-            self.parent_constructed();
-
-            let obj = self.obj();
-            obj.setup_providers();
-            obj.setup_layer();
-            obj.setup_watch_focus();
-            obj.setup_hide_sidebar();
-            obj.setup_input();
-        }
     }
 
     impl WidgetImpl for LupaWindow {}
@@ -115,12 +106,22 @@ impl LupaWindow {
     pub fn new<P: IsA<gtk::Application>>(application: &P, config: &LupaConfig) -> Self {
         let icon_size = config.aesthetic.entry_size - 4;
         let max_file_entries = config.beavior.max_file_entries;
+        let anchors = config.aesthetic.anchors.clone();
 
-        glib::Object::builder()
+        let obj: LupaWindow = glib::Object::builder()
             .property("application", application)
             .property("icon_size", icon_size)
             .property("max_file_entries", max_file_entries)
-            .build()
+            .property("anchors", anchors)
+            .build();
+
+        obj.setup_providers();
+        obj.setup_layer();
+        obj.setup_watch_focus();
+        obj.setup_hide_sidebar();
+        obj.setup_input();
+
+        obj
     }
 
     fn shrink(&self) {
@@ -133,6 +134,31 @@ impl LupaWindow {
 
         self.set_layer(Layer::Top);
         self.set_keyboard_mode(KeyboardMode::OnDemand);
+
+        let margin_size = self.icon_size() as i32 / 4;
+
+        for anchor in self.anchors().split(",") {
+            match anchor.trim() {
+                "top" => {
+                    self.set_anchor(gtk4_layer_shell::Edge::Top, true);
+                    self.set_margin(gtk4_layer_shell::Edge::Top, margin_size);
+                }
+
+                "bottom" => {
+                    self.set_anchor(gtk4_layer_shell::Edge::Bottom, true);
+                    self.set_margin(gtk4_layer_shell::Edge::Bottom, margin_size);
+                }
+                "left" => {
+                    self.set_anchor(gtk4_layer_shell::Edge::Left, true);
+                    self.set_margin(gtk4_layer_shell::Edge::Left, margin_size);
+                }
+                "right" => {
+                    self.set_anchor(gtk4_layer_shell::Edge::Right, true);
+                    self.set_margin(gtk4_layer_shell::Edge::Right, margin_size);
+                }
+                _ => {} // No-op
+            }
+        }
     }
 
     fn setup_providers(&self) {

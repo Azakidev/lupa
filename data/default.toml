@@ -14,6 +14,10 @@
 # The height of each entry
 # entry_size=64 # Integer (Default: 64, Range: [0–u32 limit])
 
+# The anchors for the launcher window
+# Separate valid values by commas as shown
+# anchors="" # String (Default: "", Values: "top, bottom, left, right")
+
 [Behavior]
 # Whether the launcher will close the moment it loses its active
 # status by, for example, clicking off the launcher

@@ -114,7 +114,7 @@ impl LupaEntry {
             icon.set_width_request(size as i32);
             icon.set_height_request(size as i32);
 
-            if size != 60 {
+            if size != 64 {
                 let icon_size = (size as f32 * 0.6) as i32;
                 icon.set_pixel_size(icon_size);
             }

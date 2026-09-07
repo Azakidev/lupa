@@ -1,6 +1,6 @@
 # Maintainer: FatDawlf <zazaguichi@outlook.com>
 pkgname=lupa-git
-pkgver=0.1.0
+pkgver=r38.44bfcae
 pkgrel=1
 pkgdesc="A minimalist launcher built on gtk4-layer-shell."
 arch=('x86_64' 'aarch64')
@@ -45,6 +45,7 @@ package() {
 	local binname="${pkgname//-git/}"
 
 	install -Dm755 "target/release/$binname" "$pkgdir/usr/bin/$binname"
+	install -Dm644 "${srcdir}/${pkgname}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 
 	local out_dir
 	out_dir=$(find target/release/build/ -maxdepth 2 -type d -name "out" -exec test -d "{}/locale" \; -print -quit)

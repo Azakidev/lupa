@@ -325,7 +325,7 @@ pub struct App {
     pub actions: Vec<AppAction>,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, PartialOrd)]
 pub struct AppAction {
     pub id: String,
     pub name: String,
@@ -489,6 +489,10 @@ fn parse_desktop_entry(content: &str, location: &str, current_desktop: &str, is_
     }
 
     if !should_hide && has_name && has_exec && has_type {
+        if action != AppAction::default() {
+            app.actions.push(action);
+        }
+
         Some(app)
     } else {
         None

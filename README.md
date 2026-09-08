@@ -1,5 +1,9 @@
 # Lupa
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Azakidev/lupa/refs/heads/main/dist/logo.svg" />
+</p>
+
 A minimalist launcher built with gtk4-layer-shell and rust.
 
 ## Usage

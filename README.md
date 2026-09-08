@@ -2,9 +2,10 @@
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/Azakidev/lupa/refs/heads/main/dist/logo.svg" />
+
+  A minimalist launcher built with gtk4-layer-shell and rust.
 </p>
 
-A minimalist launcher built with gtk4-layer-shell and rust.
 
 ## Usage
 > [!NOTE]
@@ -13,7 +14,7 @@ A minimalist launcher built with gtk4-layer-shell and rust.
 > if this is the case.
 
 ### Core Features
-The application comes with several core search providers.
+Lupa comes with several core search providers.
 - Applications
 - Files, making use and requiring the `localsearch` indexer
 - Evaluate mathematical expressions, making use of the [evalexpr crate](https://crates.io/crates/evalexpr)
@@ -38,6 +39,25 @@ You may always print the default configuration by running lupa with the
 `--default-config` flag (or just `-d`).
 
 Documentation for the configuration file are included in the default configuration.
+
+## Screenshots
+<p align="center">
+<img src="https://raw.githubusercontent.com/Azakidev/lupa/refs/heads/main/dist/ss/1.png" />
+</p>
+
+> Lupa showing multiple result types.
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/Azakidev/lupa/refs/heads/main/dist/ss/2.png" />
+</p>
+
+> Lupa showing the sidebar results for an application.
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/Azakidev/lupa/refs/heads/main/dist/ss/3.png" />
+</p>
+
+> Lupa showing a system action.
 
 ## Credit
 Some implementation details for app discovery and execution are heavily based in

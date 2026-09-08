@@ -41,7 +41,7 @@ impl Default for Aesthetic {
     fn default() -> Self {
         Self {
             opacity: 1.0,
-            radius: 12,
+            radius: 15,
             entries: 5.0,
             entry_size: 64,
             anchors: String::new(),

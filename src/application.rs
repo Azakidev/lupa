@@ -130,15 +130,9 @@ impl LupaApplication {
             "
             :root {{
                 --lupa-opacity: {opacity};
+                --entry-size: {entry_size}px;
                 --icon-size: {icon_size}px;
-            }}
-
-            .launcher {{
-                border-radius: {radius}px;
-            }}
-
-            .launcher_entry {{
-                min-height: {entry_size}px;
+                --lupa-radius: {radius}px;
             }}
             "
         ));

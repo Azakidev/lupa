@@ -4,11 +4,17 @@
 
 .launcher {
     background-color: var(--window-bg);
+    border-radius: var(--lupa-radius);
 }
 
 .sidebar-pane {
     --sidebar-border-color: var(--border-color);
     background-color: var(--window-bg) !important;
+}
+
+.launcher_entry {
+    min-height: var(--entry_size);
+    border-radius: calc(var(--lupa-radius) - 8px);
 }
 
 .searcher {

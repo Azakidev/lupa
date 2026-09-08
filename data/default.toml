@@ -6,7 +6,7 @@
 # opacity=1.0 # Float (Default: 1.0, Range: [0–1])
 
 # The rounding of the main window
-# radius=12 # Integer (Default: 12, Range [0-u32 limit])
+# radius=15 # Integer (Default: 15, Range [0-u32 limit])
 
 # The amount of visible entries
 # entries=5.0 # Float (Default: 5.0, Range: [0–f32 limit])

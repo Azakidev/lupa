@@ -10,7 +10,6 @@ use std::{env, fs, path::Path, process::Command};
 static GETTEXT_PACKAGE: &str = "lupa";
 
 fn main() {
-    // Re-run build if translation files change
     println!("cargo:rerun-if-changed=src/ui");
 
     glib_build_tools::compile_resources(
@@ -19,7 +18,7 @@ fn main() {
         "lupa.gresource",
     );
 
-    println!("cargo:rerun-if-changed=po/POTFILES.in");
+    println!("cargo:rerun-if-changed=po/POTFILES");
     println!("cargo:rerun-if-changed=po/");
 
     let po_dir = Path::new("po");
@@ -47,7 +46,7 @@ fn main() {
 
     // Generate lupa.pot
     if !files_to_translate.is_empty() {
-        let pot_path = po_dir.join(format!("{}.pot", GETTEXT_PACKAGE));
+        let pot_path = po_dir.join("lupa.pot");
 
         let mut cmd = Command::new("xgettext");
         cmd.args([
@@ -66,7 +65,7 @@ fn main() {
             .status()
             .expect("Failed to run xgettext. Is gettext installed?");
         if !status.success() {
-            eprintln!("Warning: xgettext failed to extract strings.");
+            println!("cargo:error=Warning: xgettext failed to extract strings.");
         }
     }
 

@@ -12,6 +12,7 @@ use adw::{
 };
 use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
 use gettextrs::gettext;
+use gtk::glib::{KeyFile, KeyFileFlags};
 use icon_finder::find_icon;
 use std::{
     cell::{OnceCell, RefCell},
@@ -404,6 +405,18 @@ fn parse_desktop_entry(
     let mut has_type = false;
     let mut should_hide = false;
 
+    let mut section_name = String::new();
+
+    let key_file = KeyFile::new();
+
+    if let Err(e) = key_file.load_from_file(location, KeyFileFlags::NONE) {
+        eprintln!(
+            "Couldn't parse desktop file for {} as keyfile: {}",
+            location, e
+        );
+        return None;
+    };
+
     app.is_flatpak = is_flatpak;
     app.location = location.to_string();
 
@@ -415,6 +428,8 @@ fn parse_desktop_entry(
         }
 
         if line.starts_with('[') {
+            section_name = line.replace('[', "").replace(']', "");
+
             if in_action_section {
                 if action.name != String::default() && action.exec != String::default() {
                     app.actions.push(action.clone());
@@ -432,6 +447,7 @@ fn parse_desktop_entry(
                     .to_string();
             }
             continue;
+
         }
 
         if in_main_section && let Some((key, value)) = line.split_once('=') {
@@ -467,7 +483,11 @@ fn parse_desktop_entry(
                     }
                 }
                 "Name" => {
-                    app.name = value.to_string();
+                    let localised = key_file
+                        .locale_string("Desktop Entry", "Name", None)
+                        .and_then(|s| Ok(s.to_string()))
+                        .unwrap_or(value.to_string());
+                    app.name = localised;
                     has_name = true;
                 }
                 "Exec" => {
@@ -475,7 +495,13 @@ fn parse_desktop_entry(
                     has_exec = true;
                 }
                 "Icon" => app.icon = Some(value.to_string()),
-                "Comment" => app.comment = Some(value.to_string()),
+                "Comment" => {
+                    let localised = key_file
+                        .locale_string(&section_name, "Comment", None)
+                        .and_then(|s| Ok(s.to_string()))
+                        .unwrap_or(value.to_string());
+                    app.comment = Some(localised)
+                }
                 _ => {} // No-op
             }
         }
@@ -485,7 +511,12 @@ fn parse_desktop_entry(
             let value = value.trim();
 
             match key {
-                "Name" => action.name = value.to_string(),
+                "Name" => {
+                    action.name = key_file
+                        .locale_string(&section_name, "Name", None)
+                        .and_then(|s| Ok(s.to_string()))
+                        .unwrap_or(value.to_string())
+                }
                 "Icon" => action.icon = Some(value.to_string()),
                 "Exec" => action.exec = value.to_string(),
                 _ => {} // No-op

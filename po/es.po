@@ -5,13 +5,12 @@
 # FULL NAME <EMAIL@ADDRESS>, 2026.
 # FatDawlf <zazaguichi@outlook.com>, 2026.
 #
-#: src/ui/window.blp:43
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-01 02:50+0200\n"
-"PO-Revision-Date: 2026-09-01 03:09+0200\n"
+"POT-Creation-Date: 2026-09-10 18:53+0200\n"
+"PO-Revision-Date: 2026-09-10 18:54+0200\n"
 "Last-Translator: FatDawlf <zazaguichi@outlook.com>\n"
 "Language-Team: Spanish\n"
 "Language: es\n"
@@ -21,18 +20,54 @@ msgstr ""
 "X-Generator: Gtranslator 50.0\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/ui/window.blp:27
+#: src/ui/window.blp:19
+msgid "Detail page"
+msgstr "Página de detalles"
+
+#: src/ui/window.blp:56
 msgid "Search"
 msgstr "Buscar"
 
-#: src/ui/window.blp:44
+#: src/ui/window.blp:72
 msgid "Search anything…"
 msgstr "Busca lo que sea…"
 
-#: src/ui/entry.blp:27
+#: src/ui/entry.blp:26 src/ui/sidebar.blp:13
 msgid "Icon"
 msgstr "Icono"
 
-#: src/application.rs:45
+#: src/ui/sidebar.blp:50
+msgid "Actions"
+msgstr "Acciones"
+
+#: src/application.rs:46
 msgid "Print the default configuration"
 msgstr "Imprime la configuración por defecto"
+
+#: src/providers/system.rs:106
+msgid "Shutdown"
+msgstr "Apagar"
+
+#: src/providers/system.rs:138
+msgid "Reboot"
+msgstr "Reiniciar"
+
+#: src/providers/system.rs:170
+msgid "Hibernate"
+msgstr "Hibernar"
+
+#: src/providers/system.rs:202
+msgid "Sleep"
+msgstr "Suspender"
+
+#: src/providers/app.rs:197
+msgid "Open entry location"
+msgstr "Abrir ubicación de la entrada"
+
+#: src/providers/file.rs:186
+msgid "Open in file browser"
+msgstr "Abrir en el explorador de archivos"
+
+#: src/providers/file.rs:214
+msgid "Copy path"
+msgstr "Copiar ubicación"

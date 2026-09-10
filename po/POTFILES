@@ -3,6 +3,10 @@
 # UI
 src/ui/window.blp
 src/ui/entry.blp
+src/ui/sidebar.blp
 
 # Code
 src/application.rs
+src/providers/system.rs
+src/providers/app.rs
+src/providers/file.rs

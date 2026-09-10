@@ -1,0 +1,72 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# FatDawlf <zazaguichi@outlook.com>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: lupa\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-10 18:58+0200\n"
+"PO-Revision-Date: 2026-09-10 19:24+0200\n"
+"Last-Translator: FatDawlf <zazaguichi@outlook.com>\n"
+"Language-Team: Catalan (Valencian)\n"
+"Language: ca@valencia\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Gtranslator 50.0\n"
+
+#: src/ui/window.blp:19
+msgid "Detail page"
+msgstr "Pàgina de detalls"
+
+#: src/ui/window.blp:56
+msgid "Search"
+msgstr "Cerca"
+
+#: src/ui/window.blp:72
+msgid "Search anything…"
+msgstr "Cerca el qui vulls…"
+
+#: src/ui/entry.blp:26 src/ui/sidebar.blp:13
+msgid "Icon"
+msgstr "Icona"
+
+#: src/ui/sidebar.blp:50
+msgid "Actions"
+msgstr "Accions"
+
+#: src/application.rs:46
+msgid "Print the default configuration"
+msgstr "Imprimeix la configuració per defecte"
+
+#: src/providers/system.rs:106
+msgid "Shutdown"
+msgstr "Apagar"
+
+#: src/providers/system.rs:138
+msgid "Reboot"
+msgstr "Reiniciar"
+
+#: src/providers/system.rs:170
+msgid "Hibernate"
+msgstr "Hibernar"
+
+#: src/providers/system.rs:202
+msgid "Sleep"
+msgstr "Suspendre"
+
+#: src/providers/app.rs:197
+msgid "Open entry location"
+msgstr "Obrir ubicació de l'entrada"
+
+#: src/providers/file.rs:186
+msgid "Open in file browser"
+msgstr "Obre a l'explorador de fitxers"
+
+#: src/providers/file.rs:214
+msgid "Copy path"
+msgstr "Copiar ubicació"

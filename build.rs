@@ -35,9 +35,12 @@ fn main() {
             let line = line.trim();
             // Ignore empty lines and comments
             if !line.is_empty() && !line.starts_with('#') {
-                files_to_translate.push(line.to_string());
-                // Tell Cargo to watch this specific file for changes!
-                println!("cargo:rerun-if-changed={}", line);
+                if Path::new(&line.to_string()).exists() {
+                    files_to_translate.push(line.to_string());
+                    println!("cargo:rerun-if-changed={}", line);
+                } else {
+                    println!("cargo:warning=File in POTFILES not found in tree: {}", line.to_string());
+                }
             }
         }
     } else {

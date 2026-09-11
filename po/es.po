@@ -4,16 +4,17 @@
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # FULL NAME <EMAIL@ADDRESS>, 2026.
 # FatDawlf <zazaguichi@outlook.com>, 2026.
+# Hoi <>, 2026.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-10 18:53+0200\n"
-"PO-Revision-Date: 2026-09-10 18:54+0200\n"
-"Last-Translator: FatDawlf <zazaguichi@outlook.com>\n"
-"Language-Team: Spanish\n"
-"Language: es\n"
+"POT-Creation-Date: 2026-09-11 15:03+0200\n"
+"PO-Revision-Date: 2026-09-11 21:36+0200\n"
+"Last-Translator: Hoi <>\n"
+"Language-Team: German\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -60,7 +61,7 @@ msgstr "Hibernar"
 msgid "Sleep"
 msgstr "Suspender"
 
-#: src/providers/app.rs:197
+#: src/providers/app.rs:210
 msgid "Open entry location"
 msgstr "Abrir ubicación de la entrada"
 
@@ -71,3 +72,7 @@ msgstr "Abrir en el explorador de archivos"
 #: src/providers/file.rs:214
 msgid "Copy path"
 msgstr "Copiar ubicación"
+
+#: src/providers/emoji.rs:155
+msgid "Variants"
+msgstr "Variantes"

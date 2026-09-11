@@ -1,8 +1,4 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# FatDawlf <zazaguichi@outlook.com>, 2026.
+#
 # Hoi <>, 2026.
 #
 msgid ""
@@ -22,56 +18,56 @@ msgstr ""
 
 #: src/ui/window.blp:19
 msgid "Detail page"
-msgstr "Pàgina de detalls"
+msgstr "Detailansicht"
 
 #: src/ui/window.blp:56
 msgid "Search"
-msgstr "Cerca"
+msgstr "Suche"
 
 #: src/ui/window.blp:72
 msgid "Search anything…"
-msgstr "Cerca el qui vulls…"
+msgstr "Suchbegriff"
 
 #: src/ui/entry.blp:26 src/ui/sidebar.blp:13
 msgid "Icon"
-msgstr "Icona"
+msgstr "Symbol"
 
 #: src/ui/sidebar.blp:50
 msgid "Actions"
-msgstr "Accions"
+msgstr "Aktionen"
 
 #: src/application.rs:46
 msgid "Print the default configuration"
-msgstr "Imprimeix la configuració per defecte"
+msgstr "Default-Konfiguration ausgeben"
 
 #: src/providers/system.rs:106
 msgid "Shutdown"
-msgstr "Apagar"
+msgstr "Herunterfahren"
 
 #: src/providers/system.rs:138
 msgid "Reboot"
-msgstr "Reiniciar"
+msgstr "Neustart"
 
 #: src/providers/system.rs:170
 msgid "Hibernate"
-msgstr "Hibernar"
+msgstr "Ruhezustand"
 
 #: src/providers/system.rs:202
 msgid "Sleep"
-msgstr "Suspendre"
+msgstr "Bereitschaftsmodus"
 
 #: src/providers/app.rs:210
 msgid "Open entry location"
-msgstr "Obrir ubicació de l'entrada"
+msgstr "App-Eintrag öffnen"
 
 #: src/providers/file.rs:186
 msgid "Open in file browser"
-msgstr "Obre a l'explorador de fitxers"
+msgstr "In Dateimanager öffnen"
 
 #: src/providers/file.rs:214
 msgid "Copy path"
-msgstr "Copiar ubicació"
+msgstr "Dateipfad kopieren"
 
 #: src/providers/emoji.rs:155
 msgid "Variants"
-msgstr "Variants"
+msgstr "Varianten"

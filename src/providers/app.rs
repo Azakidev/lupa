@@ -78,19 +78,32 @@ impl Provider for AppProvider {
 
         let mut filtered = apps
             .iter()
-            .map(|app| app.name.clone())
-            .filter(|a| {
+            .map(|app| (app.name.clone(), app.tryexec.clone(), app.keywords.clone()))
+            .filter(|(name, tryexec, kw)|
                 query
                     .to_lowercase()
                     .chars()
                     .map(|c| c.to_string())
-                    .all(|c| a.to_lowercase().contains(&c))
-            })
-            .filter_map(|a| {
-                if let Some(score) = matcher.fuzzy_match(&a.to_lowercase(), &query.to_lowercase())
-                    && score >= 25
-                {
-                    Some((a.clone(), score))
+                    .all(|c| name.to_lowercase().contains(&c) || tryexec.to_lowercase().contains(&c) || kw.to_lowercase().contains(&c))
+            )
+            .filter_map(|(name, tryexec, kw)| {
+                let name_score = matcher
+                    .fuzzy_match(&name.to_lowercase(), &query.to_lowercase())
+                    .unwrap_or(0);
+
+                let try_exec_score = matcher
+                    .fuzzy_match(&tryexec.to_lowercase(), &query.to_lowercase())
+                    .unwrap_or(0);
+
+                let kw_score = kw
+                    .split(";")
+                    .filter(|k| !k.is_empty())
+                    .filter_map(|k| matcher.fuzzy_match(&k.to_lowercase(), &query.to_lowercase()))
+                    .max()
+                    .unwrap_or(0);
+
+                if name_score >= 25 || try_exec_score >= 25 || kw_score >= 25 {
+                    Some((name.clone(), name_score.max(kw_score).max(try_exec_score)))
                 } else {
                     None
                 }
@@ -320,7 +333,9 @@ pub struct App {
     pub location: String,
     pub name: String,
     pub exec: String,
+    pub tryexec: String,
     pub comment: Option<String>,
+    pub keywords: String,
     pub icon: Option<String>,
     pub is_flatpak: bool,
     pub actions: Vec<AppAction>,
@@ -355,7 +370,7 @@ pub fn discover_apps() -> Option<Vec<App>> {
     let mut apps: Vec<App> = Vec::new();
 
     for path in locations
-        .split(":")
+        .split(':')
         .chain([user_data_path.to_str().unwrap()])
     {
         let app_dir = Path::new(path).join("applications");
@@ -494,6 +509,9 @@ fn parse_desktop_entry(
                     app.exec = value.to_string();
                     has_exec = true;
                 }
+                "TryExec" => {
+                    app.tryexec = value.to_string();
+                }
                 "Icon" => app.icon = Some(value.to_string()),
                 "Comment" => {
                     let localised = key_file
@@ -501,6 +519,13 @@ fn parse_desktop_entry(
                         .and_then(|s| Ok(s.to_string()))
                         .unwrap_or(value.to_string());
                     app.comment = Some(localised)
+                }
+                "Keywords" => {
+                    let localised = key_file
+                        .locale_string(&section_name, "Keywords", None)
+                        .and_then(|s| Ok(s.to_string()))
+                        .unwrap_or(value.to_string());
+                    app.keywords = localised;
                 }
                 _ => {} // No-op
             }

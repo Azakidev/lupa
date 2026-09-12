@@ -11,17 +11,15 @@ use crate::{
 };
 
 pub trait Provider {
-    const PREFIX: char;
-
     fn prepare(&self, win: &LupaWindow);
 
     fn hide_entries(&self);
 
     fn update_entries(&self, query: &str, win: &LupaWindow);
 
-    fn prefix(&self) -> char {
-        Self::PREFIX
-    }
+    fn prefix(&self) -> char;
+
+    fn name(&self) -> &str;
 }
 
 pub trait SidebarProvider {

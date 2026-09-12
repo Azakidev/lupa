@@ -54,6 +54,7 @@ impl Default for Aesthetic {
 pub struct Behavior {
     pub close_when_unfocused: bool,
     pub max_file_entries: u32,
+    pub fallback_providers: String,
 }
 
 impl Default for Behavior {
@@ -61,6 +62,7 @@ impl Default for Behavior {
         Self {
             close_when_unfocused: true,
             max_file_entries: 25,
+            fallback_providers: "system, app, file, emoji, calc".to_string(),
         }
     }
 }

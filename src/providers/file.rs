@@ -39,7 +39,13 @@ pub struct FileProvider {
 }
 
 impl Provider for FileProvider {
-    const PREFIX: char = '/';
+    fn prefix(&self) -> char {
+        '/'
+    }
+
+    fn name(&self) -> &str {
+        "File"
+    }
 
     fn prepare(&self, win: &LupaWindow) {
         self.icon_size
@@ -71,10 +77,10 @@ impl Provider for FileProvider {
             return;
         }
 
-        let folder_only = query.ends_with(Self::PREFIX);
+        let folder_only = query.ends_with(self.prefix());
 
         // query/path/with/folder/
-        let query = query.strip_suffix(Self::PREFIX).unwrap_or(query);
+        let query = query.strip_suffix(self.prefix()).unwrap_or(query);
         // query/path/with/folder
 
         let mut command = Command::new("localsearch");

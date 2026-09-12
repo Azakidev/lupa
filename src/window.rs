@@ -12,7 +12,7 @@ use adw::{
     subclass::prelude::*,
 };
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
-use std::cell::RefCell;
+use std::cell::{OnceCell, RefCell};
 
 use crate::{
     application::LupaApplication,
@@ -53,13 +53,11 @@ mod imp {
         pub max_file_entries: RefCell<u32>,
         #[property(get, set)]
         pub anchors: RefCell<String>,
+        #[property(get, set)]
+        pub fallback_providers: RefCell<String>,
 
         // Providers
-        pub app_provider: AppProvider,
-        pub calc_provider: CalcProvider,
-        pub file_provider: FileProvider,
-        pub system_provider: SystemProvider,
-        pub emoji_provider: EmojiProvider,
+        pub providers: OnceCell<Vec<Box<dyn Provider>>>,
     }
 
     #[glib::object_subclass]
@@ -107,12 +105,14 @@ impl LupaWindow {
         let icon_size = config.aesthetic.entry_size;
         let max_file_entries = config.beavior.max_file_entries;
         let anchors = config.aesthetic.anchors.clone();
+        let fallback_providers = config.beavior.fallback_providers.clone();
 
         let obj: LupaWindow = glib::Object::builder()
             .property("application", application)
             .property("icon_size", icon_size)
             .property("max_file_entries", max_file_entries)
             .property("anchors", anchors)
+            .property("fallback_providers", fallback_providers)
             .build();
 
         obj.setup_providers();
@@ -162,17 +162,28 @@ impl LupaWindow {
     }
 
     fn setup_providers(&self) {
+        let providers: Vec<Box<dyn Provider>> = vec![
+            Box::new(AppProvider::default()),
+            Box::new(CalcProvider::default()),
+            Box::new(FileProvider::default()),
+            Box::new(EmojiProvider::default()),
+            Box::new(SystemProvider::default()),
+        ];
+
+        if self.imp().providers.set(providers).is_err() {
+            eprintln!("[Error] Failed to set providers");
+        }
+
         glib::idle_add_local_once(glib::clone!(
             #[weak(rename_to=win)]
             self,
             move || {
                 let imp = win.imp();
+                let providers = imp.providers.get().unwrap();
 
-                imp.app_provider.prepare(&win);
-                imp.calc_provider.prepare(&win);
-                imp.file_provider.prepare(&win);
-                imp.system_provider.prepare(&win);
-                imp.emoji_provider.prepare(&win);
+                for provider in providers {
+                    provider.prepare(&win);
+                }
             }
         ));
     }
@@ -264,41 +275,34 @@ impl LupaWindow {
     fn clear_results(&self) {
         let imp = self.imp();
 
-        imp.app_provider.hide_entries();
-        imp.calc_provider.hide_entries();
-        imp.file_provider.hide_entries();
-        imp.system_provider.hide_entries();
-        imp.emoji_provider.hide_entries();
+        if let Some(providers) = imp.providers.get() {
+            for provider in providers {
+                provider.hide_entries();
+            }
+        }
     }
 
     fn update_results(&self, query: &str) {
         let imp = self.imp();
+        let fallback_providers = self.fallback_providers();
 
         self.clear_results();
 
-        match query {
-            q if q.starts_with(AppProvider::PREFIX) => {
-                imp.app_provider.update_entries(query, self);
+        if let Some(providers) = imp.providers.get() {
+            for provider in providers {
+                if query.starts_with(provider.prefix()) {
+                    provider.update_entries(query, self);
+                    return;
+                }
             }
-            q if q.starts_with(CalcProvider::PREFIX) => {
-                imp.calc_provider.update_entries(query, self);
-            }
-            q if q.starts_with(FileProvider::PREFIX) => {
-                imp.file_provider.update_entries(query, self);
-            }
-            q if q.starts_with(SystemProvider::PREFIX) => {
-                imp.system_provider.update_entries(query, self);
-            }
-            q if q.starts_with(EmojiProvider::PREFIX) => {
-                imp.emoji_provider.update_entries(query, self);
-            }
-            // Run all if no prefix is selected
-            _ => {
-                imp.system_provider.update_entries(query, self);
-                imp.emoji_provider.update_entries(query, self);
-                imp.app_provider.update_entries(query, self);
-                imp.file_provider.update_entries(query, self);
-                imp.calc_provider.update_entries(query, self);
+
+            for fp in fallback_providers.split(',').map(|s| s.trim()) {
+                if let Some(p) = providers
+                    .iter()
+                    .find(|p| p.name().to_lowercase() == fp.to_lowercase())
+                {
+                    p.update_entries(query, self);
+                }
             }
         }
     }

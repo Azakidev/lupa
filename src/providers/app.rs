@@ -42,7 +42,13 @@ pub struct AppProvider {
 }
 
 impl Provider for AppProvider {
-    const PREFIX: char = '#';
+    fn prefix(&self) -> char {
+        '#'
+    }
+
+    fn name(&self) -> &str {
+        "App"
+    }
 
     fn prepare(&self, win: &LupaWindow) {
         self.icon_size
@@ -79,13 +85,17 @@ impl Provider for AppProvider {
         let mut filtered = apps
             .iter()
             .map(|app| (app.name.clone(), app.tryexec.clone(), app.keywords.clone()))
-            .filter(|(name, tryexec, kw)|
+            .filter(|(name, tryexec, kw)| {
                 query
                     .to_lowercase()
                     .chars()
                     .map(|c| c.to_string())
-                    .all(|c| name.to_lowercase().contains(&c) || tryexec.to_lowercase().contains(&c) || kw.to_lowercase().contains(&c))
-            )
+                    .all(|c| {
+                        name.to_lowercase().contains(&c)
+                            || tryexec.to_lowercase().contains(&c)
+                            || kw.to_lowercase().contains(&c)
+                    })
+            })
             .filter_map(|(name, tryexec, kw)| {
                 let name_score = matcher
                     .fuzzy_match(&name.to_lowercase(), &query.to_lowercase())
@@ -443,7 +453,7 @@ fn parse_desktop_entry(
         }
 
         if line.starts_with('[') {
-            section_name = line.replace('[', "").replace(']', "");
+            section_name = line.replace(['[', ']'], "");
 
             if in_action_section {
                 if action.name != String::default() && action.exec != String::default() {
@@ -462,7 +472,6 @@ fn parse_desktop_entry(
                     .to_string();
             }
             continue;
-
         }
 
         if in_main_section && let Some((key, value)) = line.split_once('=') {
@@ -500,7 +509,7 @@ fn parse_desktop_entry(
                 "Name" => {
                     let localised = key_file
                         .locale_string("Desktop Entry", "Name", None)
-                        .and_then(|s| Ok(s.to_string()))
+                        .map(|s| s.to_string())
                         .unwrap_or(value.to_string());
                     app.name = localised;
                     has_name = true;
@@ -516,14 +525,14 @@ fn parse_desktop_entry(
                 "Comment" => {
                     let localised = key_file
                         .locale_string(&section_name, "Comment", None)
-                        .and_then(|s| Ok(s.to_string()))
+                        .map(|s| s.to_string())
                         .unwrap_or(value.to_string());
                     app.comment = Some(localised)
                 }
                 "Keywords" => {
                     let localised = key_file
                         .locale_string(&section_name, "Keywords", None)
-                        .and_then(|s| Ok(s.to_string()))
+                        .map(|s| s.to_string())
                         .unwrap_or(value.to_string());
                     app.keywords = localised;
                 }
@@ -539,7 +548,7 @@ fn parse_desktop_entry(
                 "Name" => {
                     action.name = key_file
                         .locale_string(&section_name, "Name", None)
-                        .and_then(|s| Ok(s.to_string()))
+                        .map(|s| s.to_string())
                         .unwrap_or(value.to_string())
                 }
                 "Icon" => action.icon = Some(value.to_string()),

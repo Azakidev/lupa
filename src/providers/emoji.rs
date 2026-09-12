@@ -33,7 +33,13 @@ pub struct EmojiProvider {
 }
 
 impl Provider for EmojiProvider {
-    const PREFIX: char = '!';
+    fn prefix(&self) -> char {
+        '!'
+    }
+
+    fn name(&self) -> &str {
+        "Emoji"
+    }
 
     fn prepare(&self, win: &LupaWindow) {
         self.icon_size

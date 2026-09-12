@@ -39,7 +39,7 @@ fn main() {
                     files_to_translate.push(line.to_string());
                     println!("cargo:rerun-if-changed={}", line);
                 } else {
-                    println!("cargo:warning=File in POTFILES not found in tree: {}", line.to_string());
+                    println!("cargo:warning=File in POTFILES not found in tree: {}", line);
                 }
             }
         }

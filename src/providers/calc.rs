@@ -25,7 +25,13 @@ pub struct CalcProvider {
 }
 
 impl Provider for CalcProvider {
-    const PREFIX: char = '=';
+    fn prefix(&self) -> char {
+        '='
+    }
+
+    fn name(&self) -> &str {
+        "Calc"
+    }
 
     fn prepare(&self, win: &LupaWindow) {
         self.icon_size
@@ -43,7 +49,7 @@ impl Provider for CalcProvider {
     }
 
     fn update_entries(&self, query: &str, win: &LupaWindow) {
-        let query = query.strip_prefix(Self::PREFIX).unwrap_or(query);
+        let query = query.strip_prefix(self.prefix()).unwrap_or(query);
 
         if query.len() < 2 {
             return;

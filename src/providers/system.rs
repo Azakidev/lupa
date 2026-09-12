@@ -24,7 +24,13 @@ pub struct SystemProvider {
 }
 
 impl Provider for SystemProvider {
-    const PREFIX: char = '*';
+    fn prefix(&self) -> char {
+        '*'
+    }
+
+    fn name(&self) -> &str {
+        "System"
+    }
 
     fn prepare(&self, win: &LupaWindow) {
         self.icon_size

@@ -6,6 +6,8 @@
   A minimalist launcher built with gtk4-layer-shell and rust.
 </p>
 
+## Installation
+The current packages are for the AUR (lupa-git) and NixOS (flake in this repo).
 
 ## Usage
 > [!NOTE]

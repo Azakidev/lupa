@@ -34,7 +34,7 @@
                 gtk4-layer-shell
                 xdg-utils
                 localsearch
-                lua55
+                lua
             ];
 
 

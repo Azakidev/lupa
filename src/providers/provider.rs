@@ -19,7 +19,7 @@ pub trait Provider {
 
     fn prefix(&self) -> char;
 
-    fn name(&self) -> &str;
+    fn name(&self) -> String;
 }
 
 pub trait SidebarProvider {

@@ -37,8 +37,8 @@ impl Provider for EmojiProvider {
         '!'
     }
 
-    fn name(&self) -> &str {
-        "Emoji"
+    fn name(&self) -> String {
+        "Emoji".to_string()
     }
 
     fn prepare(&self, win: &LupaWindow) {

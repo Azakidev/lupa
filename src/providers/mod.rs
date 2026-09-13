@@ -12,3 +12,5 @@ pub mod calc;
 pub mod emoji;
 pub mod file;
 pub mod system;
+
+pub mod plugin;

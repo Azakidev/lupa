@@ -123,7 +123,7 @@ impl LupaConfig {
     }
 }
 
-fn config_path() -> String {
+fn config_folder() -> String {
     let config_path = match var("XDG_CONFIG_HOME") {
         Ok(s) => s,
         Err(_) => match var("HOME") {
@@ -135,5 +135,13 @@ fn config_path() -> String {
         },
     };
 
-    format!("{}/lupa/conf.toml", config_path)
+    format!("{}/lupa", config_path)
+}
+
+pub fn plugin_path() -> String {
+    format!("{}/plugins", config_folder())
+}
+
+pub fn config_path() -> String {
+    format!("{}/conf.toml", config_folder())
 }

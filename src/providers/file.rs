@@ -43,8 +43,8 @@ impl Provider for FileProvider {
         '/'
     }
 
-    fn name(&self) -> &str {
-        "File"
+    fn name(&self) -> String {
+        "File".to_string()
     }
 
     fn prepare(&self, win: &LupaWindow) {

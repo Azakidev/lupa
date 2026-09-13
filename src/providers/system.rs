@@ -28,8 +28,8 @@ impl Provider for SystemProvider {
         '*'
     }
 
-    fn name(&self) -> &str {
-        "System"
+    fn name(&self) -> String {
+        "System".to_string()
     }
 
     fn prepare(&self, win: &LupaWindow) {

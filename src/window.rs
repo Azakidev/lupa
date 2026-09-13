@@ -12,15 +12,18 @@ use adw::{
     subclass::prelude::*,
 };
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
-use std::cell::{OnceCell, RefCell};
+use std::{
+    cell::{OnceCell, RefCell},
+    path::Path,
+};
 
 use crate::{
     application::LupaApplication,
     components::entry::LupaEntry,
-    config::LupaConfig,
+    config::{LupaConfig, plugin_path},
     providers::{
         app::AppProvider, calc::CalcProvider, emoji::EmojiProvider, file::FileProvider,
-        provider::Provider, system::SystemProvider,
+        plugin::PluginProvider, provider::Provider, system::SystemProvider,
     },
     utils::first_visible_child,
 };
@@ -162,13 +165,17 @@ impl LupaWindow {
     }
 
     fn setup_providers(&self) {
-        let providers: Vec<Box<dyn Provider>> = vec![
+        let mut providers: Vec<Box<dyn Provider>> = vec![
             Box::new(AppProvider::default()),
             Box::new(CalcProvider::default()),
             Box::new(FileProvider::default()),
             Box::new(EmojiProvider::default()),
             Box::new(SystemProvider::default()),
         ];
+
+        let mut plugin_providers = self.discover_plugin_providers();
+
+        providers.append(&mut plugin_providers);
 
         if self.imp().providers.set(providers).is_err() {
             eprintln!("[Error] Failed to set providers");
@@ -186,6 +193,31 @@ impl LupaWindow {
                 }
             }
         ));
+    }
+
+    fn discover_plugin_providers(&self) -> Vec<Box<dyn Provider>> {
+        let plugin_path = plugin_path();
+        let plugin_folder = Path::new(&plugin_path);
+
+        let mut plugin_providers: Vec<Box<dyn Provider>> = Vec::new();
+
+        if plugin_folder.is_dir() && !plugin_folder.is_empty() {
+            for entry in std::fs::read_dir(plugin_folder)
+                .expect("Failed to read plugin folder")
+                .flatten()
+            {
+                let lua = mlua::Lua::new();
+                if let Err(e) = lua.load(entry.path()).exec() {
+                    eprintln!("[Error] Failed to execute plugin: {}", e);
+                    continue;
+                }
+
+                let provider = PluginProvider::new(lua);
+                plugin_providers.push(Box::new(provider));
+            }
+        }
+
+        plugin_providers
     }
 
     fn setup_watch_focus(&self) {

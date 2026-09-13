@@ -46,8 +46,8 @@ impl Provider for AppProvider {
         '#'
     }
 
-    fn name(&self) -> &str {
-        "App"
+    fn name(&self) -> String {
+        "App".to_string()
     }
 
     fn prepare(&self, win: &LupaWindow) {

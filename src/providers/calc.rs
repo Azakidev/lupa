@@ -29,8 +29,8 @@ impl Provider for CalcProvider {
         '='
     }
 
-    fn name(&self) -> &str {
-        "Calc"
+    fn name(&self) -> String {
+        "Calc".to_string()
     }
 
     fn prepare(&self, win: &LupaWindow) {

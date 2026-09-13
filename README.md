@@ -42,6 +42,13 @@ You may always print the default configuration by running lupa with the
 
 Documentation for the configuration file are included in the default configuration.
 
+### Plugins
+Plugins are located are located in `$XDG_CONFIG_HOME/lupa/plugins/`, the folder
+is not generated on first launch.
+
+The example plugin, with its anatomy and documentation, can be found at
+`./data/example_plugin.lua`.
+
 ## Screenshots
 <p align="center">
 <img src="https://raw.githubusercontent.com/Azakidev/lupa/refs/heads/main/dist/ss/1.png" />
@@ -64,6 +71,3 @@ Documentation for the configuration file are included in the default configurati
 ## Credit
 Some implementation details for app discovery and execution are heavily based in
 [lucien](https://github.com/Wachamuli/lucien).
-
-## TO-DO
-- [ ] Stateful search icon, morphs depending on prefix

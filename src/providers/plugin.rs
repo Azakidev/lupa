@@ -25,9 +25,13 @@ use crate::{
 
 #[derive(Default)]
 pub struct PluginProvider {
+    // Configuration from window
     icon_size: OnceCell<u32>,
     max_entries: OnceCell<u32>,
+    // Plugin flags
     support_sidebar: bool,
+    sort_results: bool,
+    // What makes it work
     cache: RefCell<HashMap<String, WeakRef<LupaEntry>>>,
     matcher: SkimMatcherV2,
     lua: mlua::Lua,
@@ -36,10 +40,12 @@ pub struct PluginProvider {
 impl PluginProvider {
     pub fn new(lua: mlua::Lua) -> Self {
         let support_sidebar = lua.globals().get("SUPPORTS_SIDEBAR").unwrap_or(false);
+        let sort_results = lua.globals().get("SORT_RESULTS").unwrap_or(false);
 
         Self {
             lua,
             support_sidebar,
+            sort_results,
             ..Default::default()
         }
     }
@@ -123,10 +129,7 @@ impl Provider for PluginProvider {
     }
 
     fn name(&self) -> String {
-        self.lua
-            .globals()
-            .get("NAME")
-            .unwrap_or("NAME NOT FOUND".to_string())
+        self.lua.globals().get("NAME").unwrap_or("❓".to_string())
     }
 
     fn prepare(&self, win: &LupaWindow) {
@@ -154,29 +157,55 @@ impl Provider for PluginProvider {
 
         let query = query.strip_prefix(self.prefix()).unwrap_or(query);
 
+        // Don't pass an empty query to lua
+        if query.is_empty() {
+            return;
+        }
+
         let mut all_entries = Vec::new();
 
         // Get results from lua land
         if let Ok(func) = self.lua.globals().get::<mlua::Function>("GET_RESULTS") {
-            if let Ok(result_table) = func.call::<mlua::Table>(query)
-                && let Ok(result_entries) = self
-                    .lua
-                    .from_value::<Vec<PluginEntry>>(result_table.to_value())
-            {
-                for plugin_entry in result_entries.iter().take(max_entries).cloned() {
-                    let entry =
-                        self.get_or_create_entry(plugin_entry.clone(), &mut cache, &results, win);
-                    all_entries.push((plugin_entry, entry));
+            match func.call::<mlua::Table>(query) {
+                Ok(result_table)
+                    if let Ok(result_entries) = self
+                        .lua
+                        .from_value::<Vec<PluginEntry>>(result_table.to_value()) =>
+                {
+                    for plugin_entry in result_entries.iter().take(max_entries).cloned() {
+                        let entry = self.get_or_create_entry(
+                            plugin_entry.clone(),
+                            &mut cache,
+                            &results,
+                            win,
+                        );
+                        all_entries.push((plugin_entry, entry));
+                    }
+                }
+                Ok(_) => {
+                    eprintln!("[Warn] Got unknown data from plugin {}", self.name());
+                    return;
+                }
+                Err(e) => {
+                    eprintln!(
+                        "[Warn] Failed to parse result entry from plugin {}: {}",
+                        self.name(),
+                        e
+                    );
+                    return;
                 }
             }
         } else {
             eprintln!(
-                "[Error] Provider {} failed to execute get_results function",
+                "[Error] Provider {} failed to execute the GET_RESULTS function",
                 self.name()
             );
+            return;
         }
 
-        all_entries.sort_unstable_by_key(|(pe, _)| matcher.fuzzy_match(&pe.name, query));
+        if self.sort_results {
+            all_entries.sort_unstable_by_key(|(pe, _)| matcher.fuzzy_match(&pe.name, query));
+        }
 
         let mut prev: Option<WeakRef<LupaEntry>> = None;
         for (_, le) in all_entries.iter().rev().take(max_entries) {

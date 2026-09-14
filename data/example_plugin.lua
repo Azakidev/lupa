@@ -14,6 +14,10 @@ NAME = "Example"
 --- It defaults to false, but if it is true, the appropriate functions should be present
 SUPPORT_SIDEBAR = false
 
+--- Whether the results should be sorted after the fact using SkimMatcherV2
+--- It defaults to false
+SORT_RESULTS = false
+
 --- The function for obtaining the results from a query
 --- It should return a table of tables, each table containing the following information:
 ---

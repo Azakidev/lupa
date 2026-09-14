@@ -93,6 +93,8 @@ impl PluginProvider {
                     #[strong]
                     plugin_entry,
                     move |_| {
+                        win.close();
+
                         if let Ok(func) = lua.globals().get::<mlua::Function>("EXECUTE_ENTRY")
                             && let Ok(e) = lua.to_value(&plugin_entry)
                             && let Err(e) = func.call::<()>(e)
@@ -102,8 +104,6 @@ impl PluginProvider {
                                 name, e
                             )
                         }
-
-                        win.close();
                     }
                 ),
             );
@@ -231,6 +231,8 @@ impl SidebarProvider for PluginProvider {
                             #[strong(rename_to=lua)]
                             self.lua,
                             move |_| {
+                                win.close();
+
                                 if let Ok(func) =
                                     lua.globals().get::<mlua::Function>("EXECUTE_SIDEBAR_ACTION")
                                     && let Ok(e) = lua.to_value(&entry)
@@ -241,7 +243,6 @@ impl SidebarProvider for PluginProvider {
                                         name, e
                                     )
                                 }
-                                win.close();
                             }
                         ),
                     );

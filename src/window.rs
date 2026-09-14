@@ -201,7 +201,7 @@ impl LupaWindow {
 
         let mut plugin_providers: Vec<Box<dyn Provider>> = Vec::new();
 
-        if plugin_folder.is_dir() && !plugin_folder.is_empty() {
+        if plugin_folder.is_dir() {
             for entry in std::fs::read_dir(plugin_folder)
                 .expect("Failed to read plugin folder")
                 .flatten()

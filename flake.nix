@@ -13,7 +13,7 @@
         in {
         packages.default = pkgs.rustPlatform.buildRustPackage {
             pname = "lupa";
-            version = "0.3.1";
+            version = "0.3.2";
             src = ./.;
 
             cargoLock = {
@@ -67,6 +67,7 @@
                      cargo
                      rust-analyzer
                      clippy
+                     rustfmt
                  ];
 
                  RUST_BACKTRACE = "1";

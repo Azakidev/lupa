@@ -38,8 +38,16 @@ function GET_RESULTS(query)
 end
 
 --- This function is run when the user confirms the entry
---- The window will close after it has run
+--- The window will close before it is run
+--- Optionally return a table to do specific actions on Lupa's side by returning a table as so:
+---     - action: string, valid values are "clipboard_copy" or "spawn"
+---     - value: string, the argument for each of the actions.
+--- Please prefer a spawn action over os.execute so the Lupa process isn't kept up by the
+--- newly spawned process
+--- NOTE: If the spawn action is chosen, separate arguments with newlines so they
+---       can be properly separated.
 --- @param entry table
+--- @return table | nil
 function EXECUTE_ENTRY(entry)
     print("You executed " .. entry.name .. "!")
 end
@@ -55,15 +63,25 @@ end
 function GET_SIDEBAR_ACTIONS(entry_name)
     return {
         {
-            name = query,
+            name = entry_name,
             icon = nil,
         },
     }
 end
 
 --- This function is run when the user confirms a sidebar action to run
---- The window will close after it has run
+--- The window will close before it is run
+--- Optionally return a table to do specific actions on Lupa's side by returning a table as so:
+---     - action: string, valid values are "clipboard_copy" or "spawn"
+---     - value: string, the argument for each of the actions.
+--- Please prefer a spawn action over os.execute so the Lupa process isn't kept up by the
+--- NOTE: If the spawn action is chosen, separate arguments with newlines so they
+---       can be properly separated.
 --- @param entry table
+--- @return table | nil
 function EXECUTE_SIDEBAR_ACTION(entry)
-    print("You executed " .. entry.name .. "!")
+    return {
+        action = "clipboard_copy",
+        value = "You executed " .. entry.name .. "!"
+    }
 end

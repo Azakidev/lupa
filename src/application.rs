@@ -9,14 +9,11 @@ use adw::{gdk::Display, gio, glib, prelude::*, subclass::prelude::*};
 use gettextrs::gettext;
 use std::cell::OnceCell;
 
-use crate::{
-    LupaWindow,
-    config::{DEFAULT_CONFIG, LupaConfig},
-};
+use crate::{DEFAULT_CONFIG, EXAMPLE_PLUGIN, LupaWindow, config::LupaConfig};
 
 mod imp {
 
-    use super::*;
+use super::*;
 
     #[derive(Debug, Default)]
     pub struct LupaApplication {
@@ -46,6 +43,15 @@ mod imp {
                 &gettext("Print the default configuration"),
                 None,
             );
+
+            obj.add_main_option(
+                "init-plugin",
+                glib::Char::from(b'p'),
+                glib::OptionFlags::NONE,
+                glib::OptionArg::None,
+                &gettext("Print an example plugin starter"),
+                None,
+            );
         }
     }
 
@@ -72,6 +78,11 @@ mod imp {
         ) -> std::ops::ControlFlow<glib::ExitCode> {
             if options.lookup_value("default-config", None).is_some() {
                 println!("{}", DEFAULT_CONFIG);
+                self.obj().quit();
+            }
+
+            if options.lookup_value("init-plugin", None).is_some() {
+                println!("{}", EXAMPLE_PLUGIN);
                 self.obj().quit();
             }
 

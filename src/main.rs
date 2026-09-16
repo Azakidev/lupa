@@ -21,6 +21,9 @@ use gtk::{gio, glib};
 
 static GETTEXT_PACKAGE: &str = "lupa";
 
+pub static DEFAULT_CONFIG: &str = include_str!("../data/default.toml");
+pub static EXAMPLE_PLUGIN: &str = include_str!("../data/example_plugin.lua");
+
 fn main() -> glib::ExitCode {
     // Set up gettext translations
 

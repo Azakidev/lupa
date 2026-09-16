@@ -13,7 +13,7 @@ use std::{
     io::Write,
 };
 
-pub static DEFAULT_CONFIG: &str = include_str!("../data/default.toml");
+use crate::DEFAULT_CONFIG;
 
 // Configuration file definition
 // Each section should implement default themselves

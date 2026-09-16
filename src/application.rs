@@ -13,7 +13,7 @@ use crate::{DEFAULT_CONFIG, EXAMPLE_PLUGIN, LupaWindow, config::LupaConfig};
 
 mod imp {
 
-use super::*;
+    use super::*;
 
     #[derive(Debug, Default)]
     pub struct LupaApplication {
@@ -133,17 +133,21 @@ impl LupaApplication {
 
         let opacity = config.aesthetic.opacity;
         let radius = config.aesthetic.radius;
+        let window_color = config.aesthetic.window_color.as_str();
+        let entry_elevation = config.aesthetic.entry_elevation;
 
         let entry_size = config.aesthetic.entry_size;
-        let icon_size = entry_size as f32 * 0.8;
+        let icon_size = entry_size as f32 * 0.75;
 
         provider.load_from_string(&format!(
             "
             :root {{
                 --lupa-opacity: {opacity};
+                --lupa-radius: {radius}px;
+                --window-color: {window_color};
+                --entry-elevation: {entry_elevation};
                 --entry-size: {entry_size}px;
                 --icon-size: {icon_size}px;
-                --lupa-radius: {radius}px;
             }}
             "
         ));

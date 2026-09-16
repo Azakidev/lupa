@@ -30,7 +30,9 @@ pub struct LupaConfig {
 #[derive(Debug, Deserialize)]
 #[serde(default)]
 pub struct Aesthetic {
+    pub window_color: String,
     pub opacity: f32,
+    pub entry_elevation: f32,
     pub radius: u32,
     pub entries: f32,
     pub entry_size: u32,
@@ -40,7 +42,9 @@ pub struct Aesthetic {
 impl Default for Aesthetic {
     fn default() -> Self {
         Self {
+            window_color: "var(--window-bg-color)".to_owned(),
             opacity: 1.0,
+            entry_elevation: 1.2,
             radius: 15,
             entries: 5.0,
             entry_size: 64,

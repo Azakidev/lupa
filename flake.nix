@@ -13,7 +13,7 @@
         in {
         packages.default = pkgs.rustPlatform.buildRustPackage {
             pname = "lupa";
-            version = "0.3.3";
+            version = "0.3.4";
             src = ./.;
 
             cargoLock = {

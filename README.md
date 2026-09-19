@@ -69,5 +69,5 @@ The example plugin, with its anatomy and documentation, can be found at
 > Lupa showing a system action.
 
 ## Credit
-Some implementation details for app discovery and execution are heavily based in
-[lucien](https://github.com/Wachamuli/lucien).
+Some implementation details for app discovery and execution are based in the
+work done by [lucien](https://github.com/Wachamuli/lucien).

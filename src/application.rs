@@ -25,6 +25,8 @@ mod imp {
     pub struct LupaApplication {
         pub config_path_override: OnceCell<String>,
         pub config: OnceCell<LupaConfig>,
+
+        pub allowed_providers: OnceCell<Vec<String>>,
     }
 
     #[glib::object_subclass]
@@ -66,6 +68,15 @@ mod imp {
                 glib::OptionFlags::NONE,
                 glib::OptionArg::String,
                 &gettext("Override configuration path"),
+                None,
+            );
+
+            obj.add_main_option(
+                "providers",
+                glib::Char::from(b'r'),
+                glib::OptionFlags::NONE,
+                glib::OptionArg::String,
+                &gettext("Override available providers"),
                 None,
             );
         }
@@ -125,6 +136,24 @@ mod imp {
                     }
                 } else {
                     eprintln!("[Warning] Failed to parse config path, using default");
+                }
+            }
+
+            if let Some(var) = options.lookup_value("providers", Some(VariantTy::STRING)) {
+                if let Some(val) = var.str() {
+                    let providers: Vec<String> = val
+                        .split(',')
+                        .map(|s| s.trim().to_string())
+                        .filter(|s| !s.is_empty())
+                        .collect();
+
+                    if !providers.is_empty() {
+                        self.allowed_providers
+                            .set(providers)
+                            .expect("[Error] Failed to override allowed providers");
+                    }
+                } else {
+                    eprintln!("[Warning] Failed to parse allowed providers, using default")
                 }
             }
 
@@ -229,5 +258,7 @@ impl LupaApplication {
         };
 
         scroller.set_height_request(size as i32);
+
+        win.set_width_request(config.aesthetic.width as i32);
     }
 }

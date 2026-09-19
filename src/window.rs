@@ -51,6 +51,8 @@ mod imp {
 
         // Configuration entries
         #[property(get, set)]
+        pub window_width: RefCell<u32>,
+        #[property(get, set)]
         pub icon_size: RefCell<u32>,
         #[property(get, set)]
         pub max_file_entries: RefCell<u32>,
@@ -61,6 +63,7 @@ mod imp {
 
         // Providers
         pub providers: OnceCell<Vec<Box<dyn Provider>>>,
+        pub allowed_providers: OnceCell<Vec<String>>,
     }
 
     #[glib::object_subclass]
@@ -105,13 +108,15 @@ glib::wrapper! {
 
 impl LupaWindow {
     pub fn new<P: IsA<gtk::Application>>(application: &P, config: &LupaConfig) -> Self {
-        let icon_size = config.aesthetic.entry_size;
+        let window_width: u32 = config.aesthetic.width.into();
+        let icon_size: u32 = config.aesthetic.entry_size.into();
         let max_file_entries = config.beavior.max_file_entries;
         let anchors = config.aesthetic.anchors.clone();
         let fallback_providers = config.beavior.fallback_providers.clone();
 
         let obj: LupaWindow = glib::Object::builder()
             .property("application", application)
+            .property("window_width", window_width)
             .property("icon_size", icon_size)
             .property("max_file_entries", max_file_entries)
             .property("anchors", anchors)
@@ -119,6 +124,7 @@ impl LupaWindow {
             .build();
 
         obj.setup_providers();
+        obj.setup_allowed_providers();
         obj.setup_layer();
         obj.setup_watch_focus();
         obj.setup_hide_sidebar();
@@ -128,7 +134,7 @@ impl LupaWindow {
     }
 
     fn shrink(&self) {
-        self.set_default_size(600, 48);
+        self.set_default_size(self.window_width() as i32, 48);
     }
 
     fn setup_layer(&self) {
@@ -161,6 +167,21 @@ impl LupaWindow {
                 }
                 _ => {} // No-op
             }
+        }
+    }
+
+    fn setup_allowed_providers(&self) {
+        let allowed_providers = self
+            .application()
+            .and_downcast_ref::<LupaApplication>()
+            .and_then(|a| a.imp().allowed_providers.get())
+            .cloned();
+
+        if let Some(ap) = allowed_providers {
+            self.imp()
+                .allowed_providers
+                .set(ap)
+                .expect("[Error] Failed to set allowed providers");
         }
     }
 
@@ -241,6 +262,8 @@ impl LupaWindow {
         let controller = gtk::EventControllerKey::new();
 
         controller.connect_key_released(glib::clone!(
+            #[weak(rename_to=obj)]
+            self,
             #[weak(rename_to=view)]
             &self.imp().sidebar_view,
             #[weak(rename_to=input)]
@@ -248,6 +271,7 @@ impl LupaWindow {
             move |_, key, _, _| {
                 if key == gtk::gdk::Key::Left {
                     view.set_show_sidebar(false);
+                    obj.set_default_size(obj.window_width() as i32, 48);
 
                     if let Some(child) = input.first_child()
                         && let Some(text) = child.downcast_ref::<gtk::Text>()
@@ -322,25 +346,40 @@ impl LupaWindow {
 
     fn update_results(&self, query: &str) {
         let imp = self.imp();
-        let fallback_providers = self.fallback_providers();
+        let Some(providers) = imp.providers.get() else {
+            return;
+        };
+
+        let filtered_providers: Vec<&Box<dyn Provider>> =
+            if let Some(allowed_providers) = imp.allowed_providers.get() {
+                providers
+                    .iter()
+                    .filter(|p| {
+                        allowed_providers
+                            .iter()
+                            .find(|ap| ap.to_lowercase() == p.name().to_lowercase())
+                            .is_some()
+                    })
+                    .collect()
+            } else {
+                providers.iter().collect()
+            };
 
         self.clear_results();
 
-        if let Some(providers) = imp.providers.get() {
-            for provider in providers {
-                if query.starts_with(provider.prefix()) {
-                    provider.update_entries(query, self);
-                    return;
-                }
+        for provider in &filtered_providers {
+            if query.starts_with(provider.prefix()) {
+                provider.update_entries(query, self);
+                return;
             }
+        }
 
-            for fp in fallback_providers.split(',').map(|s| s.trim()) {
-                if let Some(p) = providers
-                    .iter()
-                    .find(|p| p.name().to_lowercase() == fp.to_lowercase())
-                {
-                    p.update_entries(query, self);
-                }
+        for fp in self.fallback_providers().split(',').map(|s| s.trim()) {
+            if let Some(p) = filtered_providers
+                .iter()
+                .find(|p| p.name().to_lowercase() == fp.to_lowercase())
+            {
+                p.update_entries(query, self);
             }
         }
     }

@@ -72,8 +72,8 @@ impl Default for Behavior {
 }
 
 impl LupaConfig {
-    pub fn load_config() -> Self {
-        let path = config_path();
+    pub fn load_config(config_path_override: Option<String>) -> Self {
+        let path = config_path(config_path_override.clone());
 
         match fs::read_to_string(path) {
             Ok(buf) => {
@@ -87,15 +87,15 @@ impl LupaConfig {
                 conf
             }
             Err(_) => {
-                Self::save_default_config();
+                Self::save_default_config(config_path_override);
 
                 Self::default()
             }
         }
     }
 
-    fn save_default_config() {
-        let path = config_path();
+    fn save_default_config(config_path_override: Option<String>) {
+        let path = config_path(config_path_override);
 
         match fs::create_dir_all(path.replace("conf.toml", "")) {
             Ok(_) => {
@@ -127,7 +127,11 @@ impl LupaConfig {
     }
 }
 
-fn config_folder() -> String {
+fn config_folder(config_path_override: Option<String>) -> String {
+    if let Some(path) = config_path_override {
+        return path;
+    }
+
     let config_path = match var("XDG_CONFIG_HOME") {
         Ok(s) => s,
         Err(_) => match var("HOME") {
@@ -142,10 +146,10 @@ fn config_folder() -> String {
     format!("{}/lupa", config_path)
 }
 
-pub fn plugin_path() -> String {
-    format!("{}/plugins", config_folder())
+pub fn plugin_path(config_path_override: Option<String>) -> String {
+    format!("{}/plugins", config_folder(config_path_override))
 }
 
-pub fn config_path() -> String {
-    format!("{}/conf.toml", config_folder())
+pub fn config_path(config_path_override: Option<String>) -> String {
+    format!("{}/conf.toml", config_folder(config_path_override))
 }

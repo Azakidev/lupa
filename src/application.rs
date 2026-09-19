@@ -5,9 +5,15 @@
  * SPDX-License-Identifier: MIT
  */
 
-use adw::{gdk::Display, gio, glib, prelude::*, subclass::prelude::*};
+use adw::{
+    gdk::Display,
+    gio,
+    glib::{self, VariantTy},
+    prelude::*,
+    subclass::prelude::*,
+};
 use gettextrs::gettext;
-use std::cell::OnceCell;
+use std::{cell::OnceCell, path::Path};
 
 use crate::{DEFAULT_CONFIG, EXAMPLE_PLUGIN, LupaWindow, config::LupaConfig};
 
@@ -17,6 +23,7 @@ mod imp {
 
     #[derive(Debug, Default)]
     pub struct LupaApplication {
+        pub config_path_override: OnceCell<String>,
         pub config: OnceCell<LupaConfig>,
     }
 
@@ -50,6 +57,15 @@ mod imp {
                 glib::OptionFlags::NONE,
                 glib::OptionArg::None,
                 &gettext("Print an example plugin starter"),
+                None,
+            );
+
+            obj.add_main_option(
+                "config-path",
+                glib::Char::from(b'c'),
+                glib::OptionFlags::NONE,
+                glib::OptionArg::String,
+                &gettext("Override configuration path"),
                 None,
             );
         }
@@ -86,6 +102,34 @@ mod imp {
                 self.obj().quit();
             }
 
+            if let Some(var) = options.lookup_value("config-path", Some(VariantTy::STRING)) {
+                if let Some(val) = var.str() {
+                    let path = Path::new(val);
+
+                    if path.exists()
+                        && path.is_dir()
+                        && let Ok(mut dir) = std::fs::read_dir(path)
+                        && dir.any(|f| {
+                            f.is_ok_and(|entry| {
+                                entry.file_name().to_string_lossy().contains("conf.toml")
+                            })
+                        })
+                    {
+                        self.config_path_override
+                            .set(val.to_string())
+                            .expect("[Error] Failed to override config path");
+                    } else {
+                        eprintln!(
+                            "[Warning] Selected config path doesn't exist or is not a directory, using default"
+                        );
+                    }
+                } else {
+                    eprintln!("[Warning] Failed to parse config path, using default");
+                }
+            }
+
+            self.obj().load_config();
+
             std::ops::ControlFlow::Continue(())
         }
     }
@@ -108,9 +152,6 @@ impl LupaApplication {
             .property("resource-base-path", "/art/fatdawlf/Lupa")
             .build();
 
-        let config = LupaConfig::load_config();
-        app.imp().config.set(config).expect("Could not set config");
-
         app
     }
 
@@ -120,6 +161,13 @@ impl LupaApplication {
             .build();
 
         self.add_action_entries([quit_action]);
+    }
+
+    fn load_config(&self) {
+        let config_path_override = self.imp().config_path_override.get().cloned();
+
+        let config = LupaConfig::load_config(config_path_override);
+        self.imp().config.set(config).expect("Could not set config");
     }
 
     pub fn config(&self) -> &LupaConfig {

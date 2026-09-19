@@ -196,7 +196,13 @@ impl LupaWindow {
     }
 
     fn discover_plugin_providers(&self) -> Vec<Box<dyn Provider>> {
-        let plugin_path = plugin_path();
+        let config_override_path = self
+            .application()
+            .and_downcast_ref::<LupaApplication>()
+            .and_then(|a| a.imp().config_path_override.get())
+            .cloned();
+
+        let plugin_path = plugin_path(config_override_path);
         let plugin_folder = Path::new(&plugin_path);
 
         let mut plugin_providers: Vec<Box<dyn Provider>> = Vec::new();

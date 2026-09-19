@@ -45,6 +45,15 @@ mod imp {
             obj.set_accels_for_action("app.quit", &["Escape"]);
 
             obj.add_main_option(
+                "version",
+                glib::Char::from(b'v'),
+                glib::OptionFlags::NONE,
+                glib::OptionArg::None,
+                &gettext("Print the current version"),
+                None,
+            );
+
+            obj.add_main_option(
                 "default-config",
                 glib::Char::from(b'd'),
                 glib::OptionFlags::NONE,
@@ -103,14 +112,21 @@ mod imp {
             &self,
             options: &glib::VariantDict,
         ) -> std::ops::ControlFlow<glib::ExitCode> {
+            let obj = self.obj();
+
+            if options.lookup_value("version", None).is_some() {
+                println!("Lupa v{}", env!("CARGO_PKG_VERSION"));
+                obj.quit();
+            }
+
             if options.lookup_value("default-config", None).is_some() {
                 println!("{}", DEFAULT_CONFIG);
-                self.obj().quit();
+                obj.quit();
             }
 
             if options.lookup_value("init-plugin", None).is_some() {
                 println!("{}", EXAMPLE_PLUGIN);
-                self.obj().quit();
+                obj.quit();
             }
 
             if let Some(var) = options.lookup_value("config-path", Some(VariantTy::STRING)) {
@@ -157,7 +173,7 @@ mod imp {
                 }
             }
 
-            self.obj().load_config();
+            obj.load_config();
 
             std::ops::ControlFlow::Continue(())
         }

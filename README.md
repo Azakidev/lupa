@@ -40,7 +40,7 @@ if it's missing.
 You may always print the default configuration by running lupa with the
 `--default-config` flag (or just `-d`).
 
-Documentation for the configuration file are included in the default configuration.
+Documentation for the configuration file is included in the default configuration.
 
 ### Plugins
 Plugins are located are located in `$XDG_CONFIG_HOME/lupa/plugins/`, the folder

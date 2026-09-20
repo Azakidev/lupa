@@ -18,6 +18,7 @@ use std::{
 };
 
 use crate::{
+    api::prepare_lua,
     application::LupaApplication,
     components::entry::LupaEntry,
     config::{LupaConfig, plugin_path},
@@ -233,14 +234,19 @@ impl LupaWindow {
                 .expect("Failed to read plugin folder")
                 .flatten()
             {
-                let lua = mlua::Lua::new();
-                if let Err(e) = lua.load(entry.path()).exec() {
-                    eprintln!("[Error] Failed to execute plugin: {}", e);
-                    continue;
-                }
+                if let Ok(filetype) = entry.file_type()
+                    && !filetype.is_dir()
+                    && entry.file_name().to_string_lossy().ends_with(".lua")
+                    && let Ok(lua) = prepare_lua(self)
+                {
+                    if let Err(e) = lua.load(entry.path()).exec() {
+                        eprintln!("[Error] Failed to execute plugin: {}", e);
+                        continue;
+                    }
 
-                let provider = PluginProvider::new(lua);
-                plugin_providers.push(Box::new(provider));
+                    let provider = PluginProvider::new(lua);
+                    plugin_providers.push(Box::new(provider));
+                }
             }
         }
 

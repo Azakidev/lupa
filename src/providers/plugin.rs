@@ -15,13 +15,11 @@ use mlua::prelude::*;
 use std::{
     cell::{OnceCell, RefCell},
     collections::HashMap,
-    process::Command,
 };
 
 use crate::{
     components::{entry::LupaEntry, sidebar::LupaSidebarContent},
     providers::provider::{Provider, SidebarProvider},
-    utils::spawn_with_new_session,
     window::LupaWindow,
 };
 
@@ -101,28 +99,17 @@ impl PluginProvider {
                     #[strong]
                     plugin_entry,
                     move |_| {
-                        win.close();
-
                         if let Ok(func) = lua.globals().get::<mlua::Function>("EXECUTE_ENTRY")
                             && let Ok(e) = lua.to_value(&plugin_entry)
+                            && let Err(e) = func.call::<Option<mlua::Table>>(e)
                         {
-                            match func.call::<Option<mlua::Table>>(e) {
-                                Ok(response) => {
-                                    if let Some(table) = response
-                                        && let Ok(action) =
-                                            lua.from_value::<PluginExecAction>(table.to_value())
-                                    {
-                                        resolve_action(action, &win);
-                                    }
-                                }
-                                Err(e) => {
-                                    eprintln!(
-                                        "[Error] Failed to call EXECUTE_ENTRY on plugin {}: {}",
-                                        name, e
-                                    )
-                                }
-                            }
+                            eprintln!(
+                                "[Error] Failed to call EXECUTE_ENTRY on plugin {}: {}",
+                                name, e
+                            )
                         }
+
+                        win.close();
                     }
                 ),
             );
@@ -273,27 +260,17 @@ impl SidebarProvider for PluginProvider {
                             #[strong(rename_to=lua)]
                             self.lua,
                             move |_| {
-                                win.close();
-
                                 if let Ok(func) =
                                     lua.globals().get::<mlua::Function>("EXECUTE_SIDEBAR_ACTION")
-                                    && let Ok(e) = lua.to_value(&entry)
-                                {
-                                    match func.call::<Option<mlua::Table>>(e) {
-                                        Ok(response) => {
-                                            if let Some(table) = response
-                                                && let Ok(action) = lua.from_value::<PluginExecAction>(table.to_value()) {
-                                                resolve_action(action, &win);
-                                            }
-                                        }
-                                        Err(e) => {
+                                        && let Ok(e) = lua.to_value(&entry)
+                                        && let Err(e) = func.call::<Option<mlua::Table>>(e) {
                                             eprintln!(
                                                 "[Error] Failed to call EXECUTE_SIDEBAR_ACTION on plugin {}: {}",
                                                 name, e
                                             )
-                                        }
-                                    }
                                 }
+
+                                win.close();
                             }
                         ),
                     );
@@ -310,49 +287,9 @@ impl SidebarProvider for PluginProvider {
     }
 }
 
-fn resolve_action(action: PluginExecAction, win: &LupaWindow) {
-    match action.action {
-        PluginAction::ClipboardCopy => win.clipboard().set_text(&action.value),
-        PluginAction::Spawn => {
-            let raw_command: Vec<_> = action
-                .value
-                .lines()
-                .filter(|chunk| !chunk.is_empty() && !chunk.starts_with("%"))
-                .collect();
-
-            println!("Running command: {:?}", raw_command);
-
-            let [binary, args @ ..] = raw_command.as_slice() else {
-                return;
-            };
-
-            let mut command = Command::new(binary);
-            command.args(args);
-
-            if let Err(e) = spawn_with_new_session(&mut command) {
-                eprintln!("Failed to spawn process: {}", e);
-            }
-        }
-    }
-}
-
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 struct PluginEntry {
     name: String,
     description: Option<String>,
     icon: Option<String>,
-}
-
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
-struct PluginExecAction {
-    action: PluginAction,
-    value: String,
-}
-
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
-enum PluginAction {
-    #[serde(rename = "clipboard_copy")]
-    ClipboardCopy,
-    #[serde(rename = "spawn")]
-    Spawn,
 }

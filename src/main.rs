@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
+mod api;
 mod application;
 mod components;
 mod config;
@@ -12,13 +13,11 @@ mod providers;
 mod utils;
 mod window;
 
-use self::application::LupaApplication;
-use self::window::LupaWindow;
-
+use adw::{gio, glib, prelude::*};
 use gettextrs::{bind_textdomain_codeset, bindtextdomain, textdomain};
-use gtk::prelude::*;
-use gtk::{gio, glib};
 use nix::libc;
+
+use self::{application::LupaApplication, window::LupaWindow};
 
 static GETTEXT_PACKAGE: &str = "lupa";
 

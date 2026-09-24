@@ -68,7 +68,7 @@ impl Default for Behavior {
         Self {
             close_when_unfocused: true,
             max_file_entries: 25,
-            fallback_providers: "system, app, file, emoji, calc".to_string(),
+            fallback_providers: "system, app, file, emoji, characters, calc".to_string(),
         }
     }
 }

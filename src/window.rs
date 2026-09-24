@@ -23,8 +23,8 @@ use crate::{
     components::entry::LupaEntry,
     config::{LupaConfig, plugin_path},
     providers::{
-        app::AppProvider, calc::CalcProvider, emoji::EmojiProvider, file::FileProvider,
-        plugin::PluginProvider, provider::Provider, system::SystemProvider,
+        app::AppProvider, calc::CalcProvider, chars::CharProvider, emoji::EmojiProvider,
+        file::FileProvider, plugin::PluginProvider, provider::Provider, system::SystemProvider,
     },
     utils::first_visible_child,
 };
@@ -190,8 +190,9 @@ impl LupaWindow {
         let mut providers: Vec<Box<dyn Provider>> = vec![
             Box::new(AppProvider::default()),
             Box::new(CalcProvider::default()),
-            Box::new(FileProvider::default()),
+            Box::new(CharProvider::default()),
             Box::new(EmojiProvider::default()),
+            Box::new(FileProvider::default()),
             Box::new(SystemProvider::default()),
         ];
 
@@ -356,6 +357,8 @@ impl LupaWindow {
             return;
         };
 
+        let mut found_explicit = false;
+
         let filtered_providers: Vec<&Box<dyn Provider>> =
             if let Some(allowed_providers) = imp.allowed_providers.get() {
                 providers
@@ -376,8 +379,12 @@ impl LupaWindow {
         for provider in &filtered_providers {
             if query.starts_with(provider.prefix()) {
                 provider.update_entries(query, self);
-                return;
+                found_explicit = true;
             }
+        }
+
+        if found_explicit {
+            return;
         }
 
         for fp in self.fallback_providers().split(',').map(|s| s.trim()) {

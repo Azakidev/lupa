@@ -138,13 +138,20 @@ impl CharProvider {
         let char = identifier.character.to_string();
 
         let comment = if !identifier.alias.is_empty() {
-            format!("{}; {}", identifier.name, identifier.alias)
+            format!("{}, {}", identifier.name, identifier.alias)
         } else {
             identifier.name.clone()
         };
 
-        let words: Vec<_> = comment.split_whitespace()
-            .map(|w| w.to_lowercase())
+        let words: Vec<_> = comment
+            .split_whitespace()
+            .map(|w| {
+                format!(
+                    "{}{}",
+                    w.chars().take(1).collect::<String>(),
+                    w.to_lowercase().chars().skip(1).collect::<String>()
+                )
+            })
             .collect();
 
         let entry = LupaEntry::new(

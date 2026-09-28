@@ -97,9 +97,13 @@ impl Provider for AppProvider {
                     })
             })
             .filter_map(|(name, tryexec, kw)| {
-                let name_score = matcher
-                    .fuzzy_match(&name.to_lowercase(), &query.to_lowercase())
-                    .unwrap_or(0);
+                let name_score = if name.to_lowercase() == query.to_lowercase() {
+                    1000
+                } else {
+                    matcher
+                        .fuzzy_match(&name.to_lowercase(), &query.to_lowercase())
+                        .unwrap_or(0)
+                };
 
                 let try_exec_score = matcher
                     .fuzzy_match(&tryexec.to_lowercase(), &query.to_lowercase())
@@ -409,6 +413,9 @@ pub fn discover_apps() -> Option<Vec<App>> {
             apps.append(&mut found_apps);
         }
     }
+
+    apps.sort_by_cached_key(|a| a.name.clone());
+    apps.reverse();
 
     Some(apps)
 }

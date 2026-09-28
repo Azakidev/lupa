@@ -68,15 +68,14 @@ impl Provider for EmojiProvider {
 
         let mut filtered = emojis::iter()
             .filter_map(|e| {
-                if let Some(score) = matcher.fuzzy_match(
-                    &e.shortcode().unwrap_or(e.name()).replace("_", " "),
-                    &query.replace("_", " "),
-                ) && score >= 60
-                {
-                    Some((e, score))
-                } else {
-                    None
-                }
+                let score = matcher
+                    .fuzzy_match(
+                        &e.shortcode().unwrap_or(e.name()).replace("_", " "),
+                        &query.replace("_", " "),
+                    )
+                    .unwrap_or(0);
+
+                if score >= 60 { Some((e, score)) } else { None }
             })
             .collect::<Vec<(&Emoji, i64)>>();
 

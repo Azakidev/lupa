@@ -71,7 +71,10 @@ impl Provider for CharProvider {
         let matcher = &self.matcher;
         let results = win.imp().results.get();
 
+        let is_explicit = query.starts_with(self.prefix());
         let query = query.strip_prefix(self.prefix()).unwrap_or(query);
+
+        let explicit_threshold = if is_explicit { 60 } else { 75 };
 
         let mut filtered = self
             .characters
@@ -87,8 +90,10 @@ impl Provider for CharProvider {
                     .fuzzy_match(&i.alias.to_lowercase(), &query.to_lowercase())
                     .unwrap_or(0);
 
-                if name_score >= 60 || alias_score >= 60 {
-                    Some((i, name_score.max(alias_score)))
+                let max_score = name_score.max(alias_score);
+
+                if max_score >= explicit_threshold {
+                    Some((i, max_score))
                 } else {
                     None
                 }

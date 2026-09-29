@@ -100,9 +100,10 @@ impl Provider for AppProvider {
                 let name_score = if name.to_lowercase() == query.to_lowercase() {
                     1000
                 } else {
-                    matcher
+                    let score: f32 = matcher
                         .fuzzy_match(&name.to_lowercase(), &query.to_lowercase())
-                        .unwrap_or(0)
+                        .unwrap_or(0) as f32;
+                    (score * 1.2) as i64
                 };
 
                 let try_exec_score = matcher

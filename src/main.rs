@@ -16,6 +16,9 @@ mod window;
 use adw::{gio, glib, prelude::*};
 use gettextrs::{bind_textdomain_codeset, bindtextdomain, textdomain};
 use nix::libc;
+use time::macros::format_description;
+use tracing::error;
+use tracing_subscriber::{FmtSubscriber, fmt::time::LocalTime};
 
 use self::{application::LupaApplication, window::LupaWindow};
 
@@ -25,9 +28,11 @@ pub static DEFAULT_CONFIG: &str = include_str!("../data/default.toml");
 pub static EXAMPLE_PLUGIN: &str = include_str!("../data/example_plugin.lua");
 
 fn main() -> glib::ExitCode {
+    init_logging();
+
     // NEVER run Lupa as root
     if unsafe { libc::getuid() } == 0 {
-        eprintln!("[Error] Lupa should NEVER be run as root");
+        error!("Lupa should NEVER be run as root");
         return glib::ExitCode::new(255);
     }
 
@@ -50,4 +55,23 @@ fn main() -> glib::ExitCode {
     let app = LupaApplication::new("art.fatdawlf.Lupa", &gio::ApplicationFlags::empty());
 
     app.run()
+}
+
+fn init_logging() {
+    let level = if cfg!(debug_assertions) {
+        tracing::Level::DEBUG
+    } else {
+        tracing::Level::WARN
+    };
+
+    let timer = LocalTime::new(format_description!("[hour]:[minute]:[second]"));
+
+    FmtSubscriber::builder()
+        .with_max_level(level)
+        .with_timer(timer)
+        .with_target(false)
+        .with_thread_ids(false)
+        .with_file(true)
+        .with_line_number(true)
+        .init();
 }

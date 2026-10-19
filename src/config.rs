@@ -6,9 +6,9 @@
  */
 
 use serde::Deserialize;
+use tracing::{error, info};
 use std::{
     env::var,
-    eprintln,
     fs::{self, File},
     io::Write,
 };
@@ -82,7 +82,7 @@ impl LupaConfig {
                 let conf: LupaConfig = match toml::from_str(&buf) {
                     Ok(c) => c,
                     Err(e) => {
-                        eprintln!("[Error] Failed to parse config file: {}", e);
+                        error!("Failed to parse config file: {}", e);
                         Self::default()
                     }
                 };
@@ -107,23 +107,23 @@ impl LupaConfig {
                     Ok(mut f) => {
                         match f.write_all(DEFAULT_CONFIG.as_bytes()) {
                             Ok(_) => {
-                                println!("[Info] Successfuly generated default config at {}", path);
+                                info!("Successfuly generated default config at {}", path);
                             }
                             Err(e) => {
-                                eprintln!(
-                                    "[Error] Couldn't generate a new config at {}: {}",
+                                error!(
+                                    "Couldn't generate a new config at {}: {}",
                                     path, e
                                 )
                             }
                         };
                     }
                     Err(e) => {
-                        eprintln!("[Error] Failed to create a config file at {}: {}", path, e);
+                        error!("Failed to create a config file at {}: {}", path, e);
                     }
                 };
             }
             Err(e) => {
-                eprintln!("[Error] Failed to create config folder at {}: {}", path, e);
+                error!("Failed to create config folder at {}: {}", path, e);
             }
         };
     }
@@ -139,7 +139,7 @@ fn config_folder(config_path_override: Option<String>) -> String {
         Err(_) => match var("HOME") {
             Ok(s) => format!("{}/.config", s),
             Err(e) => {
-                eprintln!("[Error] Could not find a suitable config path: {}", e);
+                error!("Could not find a suitable config path: {}", e);
                 return "/etc/".to_string();
             }
         },

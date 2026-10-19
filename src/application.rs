@@ -19,7 +19,9 @@ use crate::{DEFAULT_CONFIG, EXAMPLE_PLUGIN, LupaWindow, config::LupaConfig};
 
 mod imp {
 
-    use super::*;
+    use tracing::warn;
+
+use super::*;
 
     #[derive(Debug, Default)]
     pub struct LupaApplication {
@@ -146,12 +148,12 @@ mod imp {
                             .set(val.to_string())
                             .expect("[Error] Failed to override config path");
                     } else {
-                        eprintln!(
-                            "[Warning] Selected config path doesn't exist or is not a directory, using default"
+                        warn!(
+                            "Selected config path doesn't exist or is not a directory, using default"
                         );
                     }
                 } else {
-                    eprintln!("[Warning] Failed to parse config path, using default");
+                    warn!("Failed to parse config path, using default");
                 }
             }
 
@@ -169,7 +171,7 @@ mod imp {
                             .expect("[Error] Failed to override allowed providers");
                     }
                 } else {
-                    eprintln!("[Warning] Failed to parse allowed providers, using default")
+                    warn!("Failed to parse allowed providers, using default")
                 }
             }
 

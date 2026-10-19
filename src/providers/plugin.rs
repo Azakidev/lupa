@@ -12,6 +12,7 @@ use adw::{
 };
 use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
 use mlua::prelude::*;
+use tracing::{error, warn};
 use std::{
     cell::{OnceCell, RefCell},
     collections::HashMap,
@@ -103,8 +104,8 @@ impl PluginProvider {
                             && let Ok(e) = lua.to_value(&plugin_entry)
                             && let Err(e) = func.call::<Option<mlua::Table>>(e)
                         {
-                            eprintln!(
-                                "[Error] Failed to call EXECUTE_ENTRY on plugin {}: {}",
+                            error!(
+                                "Failed to call EXECUTE_ENTRY on plugin {}: {}",
                                 name, e
                             )
                         }
@@ -183,12 +184,12 @@ impl Provider for PluginProvider {
                     }
                 }
                 Ok(_) => {
-                    eprintln!("[Warn] Got unknown data from plugin {}", self.name());
+                    warn!("Got unknown data from plugin {}", self.name());
                     return;
                 }
                 Err(e) => {
-                    eprintln!(
-                        "[Warn] Failed to parse result entry from plugin {}: {}",
+                    warn!(
+                        "Failed to parse result entry from plugin {}: {}",
                         self.name(),
                         e
                     );
@@ -196,8 +197,8 @@ impl Provider for PluginProvider {
                 }
             }
         } else {
-            eprintln!(
-                "[Error] Provider {} failed to execute the GET_RESULTS function",
+            error!(
+                "Provider {} failed to execute the GET_RESULTS function",
                 self.name()
             );
             return;
@@ -264,8 +265,8 @@ impl SidebarProvider for PluginProvider {
                                     lua.globals().get::<mlua::Function>("EXECUTE_SIDEBAR_ACTION")
                                         && let Ok(e) = lua.to_value(&entry)
                                         && let Err(e) = func.call::<Option<mlua::Table>>(e) {
-                                            eprintln!(
-                                                "[Error] Failed to call EXECUTE_SIDEBAR_ACTION on plugin {}: {}",
+                                            error!(
+                                                "Failed to call EXECUTE_SIDEBAR_ACTION on plugin {}: {}",
                                                 name, e
                                             )
                                 }
@@ -277,8 +278,8 @@ impl SidebarProvider for PluginProvider {
                 }
             }
         } else {
-            eprintln!(
-                "[Error] Provider {} failed to execute get_results function",
+            error!(
+                "Provider {} failed to execute get_results function",
                 self.name()
             );
         }

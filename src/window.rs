@@ -12,6 +12,7 @@ use adw::{
     subclass::prelude::*,
 };
 use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
+use tracing::error;
 use std::{
     cell::{OnceCell, RefCell},
     path::Path,
@@ -201,7 +202,7 @@ impl LupaWindow {
         providers.append(&mut plugin_providers);
 
         if self.imp().providers.set(providers).is_err() {
-            eprintln!("[Error] Failed to set providers");
+            error!("Failed to set providers");
         }
 
         glib::idle_add_local_once(glib::clone!(
@@ -241,7 +242,7 @@ impl LupaWindow {
                     && let Ok(lua) = prepare_lua(self)
                 {
                     if let Err(e) = lua.load(entry.path()).exec() {
-                        eprintln!("[Error] Failed to execute plugin: {}", e);
+                        error!("Failed to execute plugin: {}", e);
                         continue;
                     }
 

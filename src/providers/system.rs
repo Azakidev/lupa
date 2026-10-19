@@ -12,6 +12,7 @@ use adw::{
 };
 use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
 use gettextrs::gettext;
+use tracing::error;
 use std::cell::{OnceCell, RefCell};
 
 use crate::{components::entry::LupaEntry, providers::provider::Provider, window::LupaWindow};
@@ -122,7 +123,7 @@ fn setup_shutdown_entry(
             win,
             move |_| {
                 if let Err(e) = system_shutdown::shutdown() {
-                    eprintln!("[Error] Failed to shutdown: {}", e);
+                    error!("[Error] Failed to shutdown: {}", e);
                 };
 
                 win.close();
@@ -154,7 +155,7 @@ fn setup_reboot_entry(
             win,
             move |_| {
                 if let Err(e) = system_shutdown::reboot() {
-                    eprintln!("[Error] Failed to reboot: {}", e);
+                    error!("Failed to reboot: {}", e);
                 };
 
                 win.close();
@@ -186,7 +187,7 @@ fn setup_hibernate_entry(
             win,
             move |_| {
                 if let Err(e) = system_shutdown::hibernate() {
-                    eprintln!("[Error] Failed to hibernate: {}", e);
+                    error!("Failed to hibernate: {}", e);
                 };
 
                 win.close();
@@ -218,7 +219,7 @@ fn setup_sleep_entry(
             win,
             move |_| {
                 if let Err(e) = system_shutdown::sleep() {
-                    eprintln!("[Error] Failed to sleep: {}", e);
+                    error!("Failed to sleep: {}", e);
                 };
 
                 win.close();

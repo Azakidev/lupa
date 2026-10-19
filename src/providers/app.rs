@@ -14,11 +14,11 @@ use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
 use gettextrs::gettext;
 use gtk::glib::{KeyFile, KeyFileFlags};
 use icon_finder::find_icon;
+use tracing::error;
 use std::{
     cell::{OnceCell, RefCell},
     collections::HashMap,
     env::var,
-    eprintln,
     fmt::Write,
     fs,
     path::{Path, PathBuf},
@@ -211,7 +211,7 @@ impl SidebarProvider for AppProvider {
                         command.args(args);
 
                         if let Err(e) = spawn_with_new_session(&mut command) {
-                            eprintln!("Failed to spawn process: {}", e);
+                            error!("Failed to spawn process: {}", e);
                             return;
                         }
                         win.close();
@@ -304,7 +304,7 @@ impl AppProvider {
                     command.args(args);
 
                     if let Err(e) = spawn_with_new_session(&mut command) {
-                        eprintln!("Failed to spawn process: {}", e);
+                        error!("Failed to spawn process: {}", e);
                         return;
                     }
 
@@ -366,17 +366,17 @@ pub struct AppAction {
 
 pub fn discover_apps() -> Option<Vec<App>> {
     let Ok(locations) = var("XDG_DATA_DIRS") else {
-        eprintln!("[Error] Could not find application data locations, is XDG_DATA_DIRS set?");
+        error!("Could not find application data locations, is XDG_DATA_DIRS set?");
         return None;
     };
 
     let Ok(home) = var("HOME") else {
-        eprintln!("[Error] Could not find user home, is HOME set?");
+        error!("Could not find user home, is HOME set?");
         return None;
     };
 
     let Ok(desktop) = var("XDG_CURRENT_DESKTOP") else {
-        eprintln!("[Error] Could not detect desktop, is XDG_CURRENT_DESKTOP set?");
+        error!("Could not detect desktop, is XDG_CURRENT_DESKTOP set?");
         return None;
     };
 
@@ -443,7 +443,7 @@ fn parse_desktop_entry(
     let key_file = KeyFile::new();
 
     if let Err(e) = key_file.load_from_file(location, KeyFileFlags::NONE) {
-        eprintln!(
+        error!(
             "Couldn't parse desktop file for {} as keyfile: {}",
             location, e
         );

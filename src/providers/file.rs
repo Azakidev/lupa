@@ -21,6 +21,7 @@ use adw::{
 use fuzzy_matcher::{FuzzyMatcher, skim::SkimMatcherV2};
 use gettextrs::gettext;
 use mime_type::{MimeFormat, MimeType};
+use tracing::warn;
 use urlencoding::decode;
 
 use crate::{
@@ -106,7 +107,7 @@ impl Provider for FileProvider {
                 if let Ok(res) = decode(l) {
                     Some(res.replace("file://", ""))
                 } else {
-                    eprintln!("[Warn] Couldn't decode {}", l);
+                    warn!("Couldn't decode {}", l);
                     None
                 }
             })

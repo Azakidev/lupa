@@ -6,6 +6,7 @@
  */
 
 use mlua::prelude::*;
+use tracing::error;
 use std::process::Command;
 
 use crate::utils::spawn_with_new_session;
@@ -26,7 +27,7 @@ pub fn spawn(_: &mlua::Lua, exec: String) -> LuaResult<()> {
     command.args(args);
 
     if let Err(e) = spawn_with_new_session(&mut command) {
-        eprintln!("Failed to spawn process {}: {}", binary, e);
+        error!("Failed to spawn process {}: {}", binary, e);
     }
     Ok(())
 }

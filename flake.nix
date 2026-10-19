@@ -13,7 +13,7 @@
         in {
         packages.default = pkgs.rustPlatform.buildRustPackage {
             pname = "lupa";
-            version = "0.3.8";
+            version = "0.3.9";
             src = ./.;
 
             cargoLock = {
@@ -34,7 +34,7 @@
                 gtk4-layer-shell
                 xdg-utils
                 localsearch
-                lua5_5
+                luajit
             ];
 
 

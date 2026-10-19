@@ -15,7 +15,7 @@ options=(!debug !lto)
 
 depends=(
 	'gtk4' 'gtk4-layer-shell' 'libadwaita'
-	'xdg-utils' 'localsearch'
+	'xdg-utils' 'localsearch' 'luajit'
 )
 
 source=("$pkgname::git+$url")

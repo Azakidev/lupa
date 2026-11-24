@@ -13,7 +13,7 @@
         in {
         packages.default = pkgs.rustPlatform.buildRustPackage {
             pname = "lupa";
-            version = "0.3.9";
+            version = "0.4.0";
             src = ./.;
 
             cargoLock = {
@@ -21,22 +21,21 @@
             };
 
             nativeBuildInputs = with pkgs; [
-                pkg-config
                 blueprint-compiler
                 gettext
+                pkg-config
                 wrapGAppsHook4
             ];
 
             buildInputs = with pkgs; [
-                gtk4
                 glib
-                libadwaita
+                gtk4
                 gtk4-layer-shell
-                xdg-utils
+                libadwaita
                 localsearch
                 luajit
+                xdg-utils
             ];
-
 
             # Build and install translations
             postInstall = ''
@@ -63,10 +62,11 @@
                  inputsFrom = [ self.packages.${system}.default ];
 
                  packages = with pkgs; [
-                     rustc
                      cargo
-                     rust-analyzer
+                     cargo-audit
                      clippy
+                     rust-analyzer
+                     rustc
                      rustfmt
                  ];
 

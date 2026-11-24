@@ -55,12 +55,6 @@ impl Provider for CalcProvider {
     fn update_entries(&self, query: &str, win: &LupaWindow) {
         let query = query.strip_prefix(self.prefix()).unwrap_or(query);
 
-        // You can't make a math operation that's 2 characters long
-        // So skip the calculation
-        if query.len() < 3 {
-            return;
-        };
-
         let mut query = query.to_string();
 
         // Automatically inject the math:: prefix for builtin functions
@@ -71,15 +65,23 @@ impl Provider for CalcProvider {
         // Avoid duplicate prefixes
         query = query.replace("math::math::", "math::");
 
-        let context = HashMapContext::<DefaultNumericTypes>::new();
+        let mut context = HashMapContext::<DefaultNumericTypes>::new();
 
-        let float_adjusted = if query.contains("/") && !query.contains(".") {
-            format!("{query}.")
-        } else {
-            query.to_string()
-        };
+        // Add a few useful constants
+        context
+            .set_value("PI".to_string(), Value::Float(std::f64::consts::PI))
+            .expect("Failed to set constant");
+        context
+            .set_value("TAU".to_string(), Value::Float(std::f64::consts::TAU))
+            .expect("Failed to set constant");
+        context
+            .set_value("E".to_string(), Value::Float(std::f64::consts::E))
+            .expect("Failed to set constant");
 
-        if let Ok(result) = eval_with_context(&float_adjusted, &context)
+        // Tidy up ant divisions recursively to ensure they remain as floats
+        query = tidy_division(query);
+
+        if let Ok(result) = eval_with_context(&query, &context)
             // Check it's not an empty result (invalid operation) or a constant
             && !result.is_empty()
             && result.to_string() != query
@@ -104,6 +106,25 @@ impl CalcProvider {
         let weak = entry.downgrade();
         self.cache.replace(Some(weak));
     }
+}
+
+fn tidy_division(segment: String) -> String {
+    segment
+        .split_once('/')
+        .map_or(segment.clone(), |(first, second)| {
+            let second = tidy_division(second.to_string());
+
+            if first
+                .trim_end()
+                .chars()
+                .last()
+                .is_some_and(|char| char.is_numeric())
+            {
+                format!("{}. / {}", first.trim_end(), second.trim_start())
+            } else {
+                format!("{} / {}", first.trim_end(), second.trim_start())
+            }
+        })
 }
 
 fn generate_calc_entry(query: &str, val: Value, icon_size: u32, win: &LupaWindow) -> LupaEntry {

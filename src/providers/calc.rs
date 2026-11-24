@@ -16,7 +16,11 @@ use evalexpr::*;
 
 use crate::{components::entry::LupaEntry, providers::provider::Provider, window::LupaWindow};
 
-static OPERANDS: &[&str] = &["+", "-", "*", "/", "^", "%", "<", ">", "=", "&", "|"];
+static MATH_FUNCS: &[&str] = &[
+    "ln", "log", "log2", "log10", "exp", "exp2", "pow", "cos", "acos", "cosh", "acosh", "sin",
+    "asin", "sinh", "asinh", "tan", "atan", "atan2", "tanh", "atanh", "sqrt", "cbrt", "hypot",
+    "abs",
+];
 
 #[derive(Default, Debug)]
 pub struct CalcProvider {
@@ -51,14 +55,23 @@ impl Provider for CalcProvider {
     fn update_entries(&self, query: &str, win: &LupaWindow) {
         let query = query.strip_prefix(self.prefix()).unwrap_or(query);
 
-        if query.len() < 2 {
+        // You can't make a math operation that's 2 characters long
+        // So skip the calculation
+        if query.len() < 3 {
             return;
         };
 
-        // Return if it's a constant
-        if !OPERANDS.iter().any(|op| query.contains(op)) {
-            return;
-        }
+        let mut query = query.to_string();
+
+        // Automatically inject the math:: prefix for builtin functions
+        MATH_FUNCS.iter().for_each(|func| {
+            query = query.replace(func, &format!("math::{func}"));
+        });
+
+        // Avoid duplicate prefixes
+        query = query.replace("math::math::", "math::");
+
+        let context = HashMapContext::<DefaultNumericTypes>::new();
 
         let float_adjusted = if query.contains("/") && !query.contains(".") {
             format!("{query}.")
@@ -66,10 +79,12 @@ impl Provider for CalcProvider {
             query.to_string()
         };
 
-        if let Ok(result) = eval(&float_adjusted)
+        if let Ok(result) = eval_with_context(&float_adjusted, &context)
+            // Check it's not an empty result (invalid operation) or a constant
             && !result.is_empty()
+            && result.to_string() != query
         {
-            let entry = generate_calc_entry(query, result, *self.icon_size.get().unwrap(), win);
+            let entry = generate_calc_entry(&query, result, *self.icon_size.get().unwrap(), win);
             self.swap_entry(win, &entry);
         };
     }

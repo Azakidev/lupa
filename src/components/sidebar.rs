@@ -131,7 +131,7 @@ impl LupaSidebarContent {
             .child(&content)
             .build();
 
-        button.connect_activate(move |b| action(b));
+        button.connect_clicked(move |b| action(b));
 
         self.imp().actions_box.append(&button);
     }

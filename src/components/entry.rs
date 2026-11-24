@@ -129,7 +129,7 @@ impl LupaEntry {
     }
 
     fn setup_launch<F: Fn(&LupaEntry) + 'static>(&self, closure: F) {
-        self.connect_activate(move |b| closure(b));
+        self.connect_clicked(move |b| closure(b));
     }
 
     fn setup_sidebar_request(&self, provider: Option<Box<dyn SidebarProvider>>, win: &LupaWindow) {

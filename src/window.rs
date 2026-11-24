@@ -135,8 +135,33 @@ impl LupaWindow {
         obj
     }
 
+    fn resize_input(&self) {
+        let Some(surface) = self.surface() else {
+            return;
+        };
+
+        let Some(bounds) = self.compute_bounds(self) else {
+            return;
+        };
+
+        let region = adw::gdk::cairo::Region::create();
+        let rect = adw::gdk::cairo::RectangleInt::new(
+            bounds.x() as i32,
+            bounds.y() as i32,
+            bounds.width() as i32,
+            bounds.height() as i32,
+        );
+
+        if let Err(e) = region.union_rectangle(&rect) {
+            error!("Failed to set input bounds: {}", e);
+        };
+
+        surface.set_input_region(Some(&region));
+    }
+
     fn shrink(&self) {
         self.set_default_size(self.window_width() as i32, 48);
+        self.resize_input();
     }
 
     fn setup_layer(&self) {
@@ -325,6 +350,7 @@ impl LupaWindow {
                             revealer.set_reveal_child(false);
                         } else {
                             revealer.set_reveal_child(true);
+                            obj.resize_input();
                         }
                     }
                 ));

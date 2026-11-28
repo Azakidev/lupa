@@ -22,10 +22,21 @@ static MATH_FUNCS: &[&str] = &[
     "abs",
 ];
 
+static STR_FUNCS: &[&str] = &[
+    "regex_matches",
+    "regex_replace",
+    "to_lowercase",
+    "to_uppercase",
+    "trim",
+    "from",
+    "substrin",
+];
+
 #[derive(Default, Debug)]
 pub struct CalcProvider {
     icon_size: OnceCell<u32>,
     cache: RefCell<Option<WeakRef<LupaEntry>>>,
+    context: OnceCell<HashMapContext>,
 }
 
 impl Provider for CalcProvider {
@@ -55,33 +66,14 @@ impl Provider for CalcProvider {
     fn update_entries(&self, query: &str, win: &LupaWindow) {
         let query = query.strip_prefix(self.prefix()).unwrap_or(query);
 
-        let mut query = query.to_string();
+        let query = tidy_query(query);
 
-        // Automatically inject the math:: prefix for builtin functions
-        MATH_FUNCS.iter().for_each(|func| {
-            query = query.replace(func, &format!("math::{func}"));
-        });
+        let context = match self.context.get() {
+            Some(ctx) => ctx,
+            None => &self.make_context()
+        };
 
-        // Avoid duplicate prefixes
-        query = query.replace("math::math::", "math::");
-
-        let mut context = HashMapContext::<DefaultNumericTypes>::new();
-
-        // Add a few useful constants
-        context
-            .set_value("PI".to_string(), Value::Float(std::f64::consts::PI))
-            .expect("Failed to set constant");
-        context
-            .set_value("TAU".to_string(), Value::Float(std::f64::consts::TAU))
-            .expect("Failed to set constant");
-        context
-            .set_value("E".to_string(), Value::Float(std::f64::consts::E))
-            .expect("Failed to set constant");
-
-        // Tidy up ant divisions recursively to ensure they remain as floats
-        query = tidy_division(query);
-
-        if let Ok(result) = eval_with_context(&query, &context)
+        if let Ok(result) = eval_with_context(&query, context)
             // Check it's not an empty result (invalid operation) or a constant
             && !result.is_empty()
             && result.to_string() != query
@@ -106,8 +98,58 @@ impl CalcProvider {
         let weak = entry.downgrade();
         self.cache.replace(Some(weak));
     }
+
+    /// Make evalexpr context and store it in the service to be reused
+    fn make_context(&self) -> HashMapContext {
+        let mut context = HashMapContext::<DefaultNumericTypes>::new();
+
+        // Add a few useful constants
+        context
+            .set_value("PI".to_string(), Value::Float(std::f64::consts::PI))
+            .expect("Failed to set constant");
+        context
+            .set_value("TAU".to_string(), Value::Float(std::f64::consts::TAU))
+            .expect("Failed to set constant");
+        context
+            .set_value("E".to_string(), Value::Float(std::f64::consts::E))
+            .expect("Failed to set constant");
+
+        self.context
+            .set(context.clone())
+            .expect("Should never reach here if context exists");
+
+        context
+    }
 }
 
+/// Cleans up the query to alias some functions in evalexpr
+/// Make the prefixes optional, and force all divisions to be float divisions
+fn tidy_query(query: &str) -> String {
+    let mut query = query.to_string();
+
+    // Automatically inject the math:: prefix for builtin functions
+    MATH_FUNCS.iter().for_each(|func| {
+        query = query.replace(func, &format!("math::{func}"));
+    });
+
+    // A couple of aliases
+    query = query.replace("lower(", "to_lowercase(");
+    query = query.replace("upper(", "to_uppercase(");
+
+    STR_FUNCS.iter().for_each(|func| {
+        query = query.replace(func, &format!("str::{func}"));
+    });
+
+    // Avoid duplicate prefixes
+    query = query.replace("math::math::", "math::");
+    query = query.replace("str::str::", "str::");
+
+    query = tidy_division(query);
+
+    query
+}
+
+/// Tidy up integer divisions recursively to ensure they remain as floats
 fn tidy_division(segment: String) -> String {
     segment
         .split_once('/')
